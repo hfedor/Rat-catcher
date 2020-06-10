@@ -1,4 +1,4 @@
-#include "Tests.hpp"
+#include "Tests.h"
 
 using namespace std;
 
