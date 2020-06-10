@@ -11,7 +11,8 @@ private:
 	std::list<std::string> verbs;
 	std::list<std::string> adjectives;
 	std::list<std::string> conjunction;
+	
+	void uploadWords();	// load words from file/db 
 public:
-
 		
 };
