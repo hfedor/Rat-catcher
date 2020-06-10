@@ -22,23 +22,58 @@ bool Tests::DBATests()
 	DBAccess  dba("db_test.db");
 	
 	 dba.ClearNounsTable();
+	 dba.ClearVerbsTable();
 	
-	int noun_id =  dba.AddNounToDB("noun1");
+	int noun_id =  dba.AddVerbToDB("noun1");
 	cout << noun_id << endl;
 	
-	if( dba.GetNoun(noun_id) != "noun1")
-		throw PreperExceptionData("DBATests", "GetNoun || AddNounToDB error:", ""); 
+	if( dba.GetVerb(noun_id) != "noun1")
+		throw PreperExceptionData("DBATests", "GetVerb || AddVerbToDB error:", ""); 
 	
-	dba.SetNoun(noun_id, "noun2");
-	if( dba.GetNoun(noun_id) != "noun2")
-		throw PreperExceptionData("DBATests", "GetNoun || SetNoun error:", ""); 
+	dba.SetVerb(noun_id, "noun2");
+	if( dba.GetVerb(noun_id) != "noun2")
+		throw PreperExceptionData("DBATests", "GetVerb || SetVerb error:", ""); 
 	
-	 dba.GetNounsInfoFromDB("tasks_copies_info_test.txt");
-	 dba.GetNounInfoFromDB(noun_id, "tasks_copies_info_test.txt");
-	 dba.GetNounsInfoFromDB(cout);
-	 dba.GetNounInfoFromDB(noun_id, cout);
+	 dba.GetVerbsInfoFromDB("tasks_copies_info_test.txt");
+	 dba.GetVerbInfoFromDB(noun_id, "tasks_copies_info_test.txt");
+	 dba.GetVerbsInfoFromDB(cout);
+	 dba.GetVerbInfoFromDB(noun_id, cout);
 	
-	 dba.RemoveNounFromDB(noun_id);
+	 dba.RemoveVerbFromDB(noun_id);
+	 
+	int verb_id =  dba.AddVerbToDB("verb1");
+	cout << verb_id << endl;
+	
+	if( dba.GetVerb(verb_id) != "verb1")
+		throw PreperExceptionData("DBATests", "GetVerb || AddVerbToDB error:", ""); 
+	
+	dba.SetVerb(verb_id, "verb2");
+	if( dba.GetVerb(verb_id) != "verb2")
+		throw PreperExceptionData("DBATests", "GetVerb || SetVerb error:", ""); 
+	
+	 dba.GetVerbsInfoFromDB("tasks_copies_info_test.txt");
+	 dba.GetVerbInfoFromDB(verb_id, "tasks_copies_info_test.txt");
+	 dba.GetVerbsInfoFromDB(cout);
+	 dba.GetVerbInfoFromDB(verb_id, cout);
+	
+	 dba.RemoveVerbFromDB(verb_id);
+	 
+	 int adjective_id =  dba.AddAdjectiveToDB("adjective1");
+	cout << adjective_id << endl;
+	
+	if( dba.GetAdjective(adjective_id) != "adjective1")
+		throw PreperExceptionData("DBATests", "GetAdjective || AddAdjectiveToDB error:", ""); 
+	
+	dba.SetAdjective(adjective_id, "adjective2");
+	if( dba.GetAdjective(adjective_id) != "adjective2")
+		throw PreperExceptionData("DBATests", "GetAdjective || SetAdjective error:", ""); 
+	
+	 dba.GetAdjectivesInfoFromDB("tasks_copies_info_test.txt");
+	 dba.GetAdjectiveInfoFromDB(adjective_id, "tasks_copies_info_test.txt");
+	 dba.GetAdjectivesInfoFromDB(cout);
+	 dba.GetAdjectiveInfoFromDB(adjective_id, cout);
+	
+	 dba.RemoveAdjectiveFromDB(adjective_id);
 		
 	return true;
 }
