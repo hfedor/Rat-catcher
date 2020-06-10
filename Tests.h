@@ -1,5 +1,9 @@
 #ifndef TESTS_HPP
 #define TESTS_HPP
+	
+#include "DBAccess.h"
+#include "Sentence1.h"
+#include "SentenceGenerator.h"
 
 #include <iostream>
 
@@ -7,6 +11,7 @@ class Tests
 {
     public:
         bool testAll();
+		bool DBATests();
 };
 
 struct exceptionData

@@ -1,8 +1,11 @@
 CXX = g++
 
-all: Sentence.o Sentence1.o SentenceGenerator.o Tests.o main.o
-	$(CXX) Sentence.o Sentence1.o SentenceGenerator.o Tests.o main.o -o test
+all: DBAccess.o Sentence.o Sentence1.o SentenceGenerator.o Tests.o main.o
+	$(CXX) DBAccess.o Sentence.o Sentence1.o SentenceGenerator.o Tests.o main.o -l sqlite3 -o test
 
+DBAccess.o: DBAccess.cpp DBAccess.h
+	$(CXX) DBAccess.cpp -c -o DBAccess.o
+	
 Sentence.o: Sentence.cpp Sentence.h
 	$(CXX) Sentence.cpp -c -o Sentence.o
 
@@ -12,11 +15,11 @@ Sentence1.o: Sentence1.cpp Sentence1.h Sentence.h
 SentenceGenerator.o: SentenceGenerator.cpp SentenceGenerator.h Sentence1.h
 	$(CXX) SentenceGenerator.cpp -c -o SentenceGenerator.o
 
-Tests.o: Tests.cpp Tests.h
-	$(CXX) Tests.cpp -c -o Tests.o
+Tests.o: Tests.cpp Tests.h DBAccess.h Sentence.h Sentence1.h SentenceGenerator.h 
+	$(CXX) Tests.cpp -c -l sqlite3 -o Tests.o
 	
 main.o: main.cpp SentenceGenerator.h Tests.h
-	$(CXX) main.cpp -c -o main.o 
+	$(CXX) main.cpp -c -l sqlite3 -o main.o 
 
 clean:
 	rm -f *.o test

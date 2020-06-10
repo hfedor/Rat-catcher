@@ -4,10 +4,7 @@
 /*
 	interface
 */
-class Sentence
-{
+class Sentence{
 private:
 public:
-
-		
 };

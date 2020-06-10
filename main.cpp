@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include "SentenceGenerator.h"
 #include "Tests.h"
 
 int main()
