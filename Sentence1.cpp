@@ -3,19 +3,17 @@
 #include <time.h> 
 #include <vector>
 
-Sentence1::Sentence1(std::string subjectIn, std::string actionIn, std::string attributiveIn) // explicit constructor with given parameter list
+Sentence1::Sentence1(std::vector<std::string> constructorValues) // explicit constructor with given parameter list
 {
-	Sentence1::subject = subjectIn;
-	Sentence1::action = actionIn;
-	Sentence1::attributive = attributiveIn;
+	Sentence1::subject = constructorValues[0];
+	Sentence1::action = constructorValues[1];
+	Sentence1::attributive = constructorValues[2];
 	Sentence1::negation = false;
 }
 
 std::string Sentence1::sentence1Generator()
 {
-	std::string resultSentence;
 	int randomizerOfNegation;
-	bool thereIsDontWord = false; // If there is a word that goes with don't, it's true 
 	
 	srand(time(NULL)); // Initialize random seed
 	randomizerOfNegation = rand() % 100 + 1; // random value from 1 to 100
@@ -49,16 +47,16 @@ std::string Sentence1::createSentence()
 		if(Sentence1::subject == dontWords[i])
 		{
 			if(Sentence1::negation)
-				return resultSentence = Sentence1::subject + " don't" + Sentence1::action + " " + Sentence1::attributive + ".";
+				return resultSentence = Sentence1::subject + " don't " + Sentence1::action + " " + Sentence1::attributive + ".";
 			else
 				return resultSentence = Sentence1::subject + " " + Sentence1::action + " " + Sentence1::attributive + ".";
 		}
 	}
 	// If we exit this loop it's third person sentence
 	if(Sentence1::negation)
-		return resultSentence = Sentence1::subject + " doesn't" + Sentence1::action + " " + Sentence1::attributive + ".";
+		return resultSentence = Sentence1::subject + " doesn't " + Sentence1::action + " " + Sentence1::attributive + ".";
 	else
-		return resultSentence = Sentence1::subject + "s" + Sentence1::action + " " + Sentence1::attributive + ".";
+		return resultSentence = Sentence1::subject + "s " + Sentence1::action + " " + Sentence1::attributive + ".";
 }
 
 

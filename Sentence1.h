@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <vector>
 #include "Sentence.h"
 
 /*
@@ -13,6 +13,6 @@ private:
 	std::string attributive; 	// feature of the subject
 public:
 	std::string sentence1Generator();
-	explicit Sentence1(std::string subjectIn, std::string actionIn, std::string attributiveIn); // explicit contructor
+	explicit Sentence1(std::vector<std::string> constructorValues); // explicit contructor
 	std::string createSentence(); // Support method to create sentence
 };
