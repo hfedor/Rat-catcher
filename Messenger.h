@@ -15,8 +15,11 @@ private:
 	std::string name;
 	std::string message = "";
 	int char_limit = 500;
+	std::string file_name = "messeges.txt";	// name of text file where messenger sends messages
 public:
-	Messenger();
+	Messenger(std::string messanger_name);
 	void generateMessage();
+	bool sendMessage(); 
+	bool sendMessage(std::string file_name); 
 	friend std::ostream & operator<< (std::ostream &out, Messenger &message);
 };

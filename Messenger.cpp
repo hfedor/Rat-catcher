@@ -2,8 +2,9 @@
 
 using namespace std;
 
-Messenger::Messenger()
+Messenger::Messenger(string messanger_name)
 {
+	name = messanger_name;
 	generateMessage();
 }
 
@@ -61,6 +62,39 @@ void Messenger::generateMessage()
 	}
 }
 
+bool Messenger::sendMessage()
+{
+	std::fstream file;
+	file.open( file_name, std::ios::app | ios::out );
+	if( file.good() != true )
+	{
+		cout << "Cant't open the file \"" << file_name  << "\"!" << std::endl;
+		return false;
+	}
+	
+	file << this << endl;
+    file.flush();
+	
+	file.close();
+	return true;
+}
+
+
+bool Messenger::sendMessage(string file_name)
+{
+	std::fstream file;
+	file.open( file_name, std::ios::out );
+	if( file.good() != true )
+	{
+		cout << "Cant't open the file \"" << file_name  << "\"!" << std::endl;
+		return false;
+	}
+	
+	file << *this << endl;
+	
+	return true;
+}
+	
 ostream & operator<< ( ostream &out, Messenger &messenger)
 {
 	out << "<message>\n";

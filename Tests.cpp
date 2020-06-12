@@ -165,14 +165,15 @@ bool Tests::CensorshipTests()
 	cp.printForbidens();
 }
 
-
 bool Tests::MessengerTests()
 {
-	Messenger messenger;
+	Messenger messenger("Kamilek");
 	
 	messenger.generateMessage();
 	
 	cout << messenger << endl;
+	
+	messenger.sendMessage("messages_test.txt"	);
 }
 
 ostream & operator<< (ostream &out, const exceptionData &exc)
