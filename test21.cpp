@@ -33,49 +33,55 @@ void test21::initializeMutex()
 
 void test21::consumer()
 {
-	std::cout << std::endl << "I am consumer" << std::endl;
 	CensorshipProgram cp;
 	
 	cp.generateForbidens(10);
 	
 	cp.printForbidens();
 	
-	sem_wait(test21::mutex); // We eneter the section
+	while(1)
+	{
+		std::cout << std::endl << "I am consumer" << std::endl;
 	
-	cp.loadMessage("messages_test.txt");
-	
-	sem_post(test21::mutex); // We leave the section
-	
-	cp.printMessage();
-	
-	cp.censureMessage();
-	cout << "censored:" << endl;
-	cp.printCensored();
-	
-	cp.loadMessage();
-	
-	cp.printMessage();
-	
-	cp.censureMessage();
-	cout << "censored:" << endl;
-	cp.printCensored();
+		sem_wait(test21::mutex); // We eneter the section
+		
+		cp.loadMessage("messages_test.txt");
+		
+		sem_post(test21::mutex); // We leave the section
+		
+		cp.printMessage();
+		
+		cp.censureMessage();
+		cout << "censored:" << endl;
+		cp.printCensored();
+		
+		cp.loadMessage();
+		
+		cp.printMessage();
+		
+		cp.censureMessage();
+		cout << "censored:" << endl;
+		cp.printCensored();
+	}
 }
 void test21::producer()
 {
-	std::cout << std::endl << "I am producer" << std::endl;
-	
 	Messenger messenger("Producent");
 	
-	messenger.generateMessage();
+	while(1)
+	{
+		std::cout << std::endl << "I am producer" << std::endl;
 	
-	cout << messenger << endl;
-	
-	sem_wait(test21::mutex); // We eneter the section
-	
-	messenger.sendMessage("messages_test.txt");
-	
-	sem_post(test21::mutex); // We leave the section
-	
+		messenger.generateMessage();
+		
+		cout << messenger << endl;
+		
+		sem_wait(test21::mutex); // We eneter the section
+		
+		messenger.sendMessage("messages_test.txt");
+		
+		sem_post(test21::mutex); // We leave the section
+	}
 }
 
 

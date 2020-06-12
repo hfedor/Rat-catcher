@@ -35,6 +35,7 @@ class DBAchivesAccess
 		int AddMessageToDB(std::string message, std::string sented, std::string cenzored, std::string loaded); // add noun with gien datas to database
 		bool BuildAchivesTable(); // build  noun table
 		bool ClearAchivesTable(); // remove all records from tasks table
+		int FindMessage(std::string message, std::string sended);
 		std::string GetMessage(int message_id); // get path to file of noun with given ID
 		std::string GetSended(int message_id); // get path to file of noun with given ID
 		std::string GetCensored(int message_id); // get path to file of noun with given ID

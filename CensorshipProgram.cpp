@@ -47,6 +47,10 @@ std::string CensorshipProgram::censureMessage()
 		}
 	}
 	
+	DBAchivesAccess dbaa("achives.db");
+	
+	//dbaa.FindMessage(message,sended);
+	
 	return censored;
 }
 
@@ -71,6 +75,8 @@ std::string CensorshipProgram::loadMessage()
 	message = dbma.GetMessage(id);
 	
 	dbma.RemoveMessageFromDB(id);
+	
+	loaded	= return_current_time_and_date();
 	
 	return message;
 }
@@ -136,6 +142,7 @@ std::string CensorshipProgram::loadMessage(std::string file_name)
 					
 			uploaded_file.close();
 			file.close();
+			loaded	= return_current_time_and_date();
 			return message;
 		}
 		else if(line == "<message>")

@@ -12,6 +12,16 @@ std::string return_current_time_and_date()
 	return ss.str();
 }
 
+std::string print_time_and_date()
+{
+	auto now = std::chrono::system_clock::now();
+	auto in_time_t = std::chrono::system_clock::to_time_t(now);
+	
+	std::stringstream ss;
+	ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
+	return ss.str();
+}
+
 Messenger::Messenger(string messanger_name)
 {
 	name = messanger_name;
@@ -70,15 +80,19 @@ void Messenger::generateMessage()
 				message += tmp;
 		}
 	}
-	
-	generate_end = std::chrono::steady_clock::now();
 }
 
 bool Messenger::sendMessage()
-{
+{	
 	DBMessageAccess dbma("messages.db");
 		
-	dbma.AddMessageToDB(message, return_current_time_and_date());
+	sended = return_current_time_and_date();
+	
+	dbma.AddMessageToDB(message, sended);	
+	
+	DBAchivesAccess dbaa("achives.db");
+	
+	dbaa.AddMessageToDB(message,sended,"","");
 	
 	return true;
 }
@@ -94,7 +108,12 @@ bool Messenger::sendMessage(string file_name)
 		return false;
 	}
 	
+	sended	= return_current_time_and_date();
 	file << *this << endl;
+	
+	DBAchivesAccess dbaa("achives.db");
+	
+	dbaa.AddMessageToDB(message,sended,"","");
 	
 	return true;
 }
@@ -122,7 +141,7 @@ ostream & operator<< ( ostream &out, Messenger &messenger)
 	
     //std::time_t now_c = chrono::system_clock::to_time_t(messenger.send);
     //out << std::put_time(std::localtime(&now_c), "%F %T") << '\n';
-    out << return_current_time_and_date() << "\n";
+    out << messenger.sended << "\n";
 	//cout << time_point_cast<nanoseconds>(messenger.send) << endl;
 	out << messenger.message << "\n";
 	out << "</message>" << endl;

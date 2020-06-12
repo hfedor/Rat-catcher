@@ -27,45 +27,7 @@ int  DBAchivesAccess::AddMessageToDB(string message, string sended, string censo
 	sqlite3_stmt* stmt = 0;
 
 	// Create SQL statement
-	sql = "SELECT * FROM achives WHERE message = ? AND sended = ? AND censored = ? AND loaded = ?";
-	
-	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
-
-	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
-	
-	sqlite3_bind_text(stmt,1,message.c_str(),-1,0);
-	sqlite3_bind_text(stmt,2,sended.c_str(),-1,0);
-	sqlite3_bind_text(stmt,3,censored.c_str(),-1,0);
-	sqlite3_bind_text(stmt,4,loaded.c_str(),-1,0);
-
-	if( sqlite3_step( stmt ) == SQLITE_ROW ) 
-		isInTable = true;
-
-	sqlite3_step( stmt );
-	sqlite3_clear_bindings( stmt );
-	sqlite3_reset( stmt );
-	
-	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
-	
-	if( rc != SQLITE_OK )
-	{
-		sqlite3_free(zErrMsg);
-		cout << "AddMessageToDB (IsAlreadyInTable) error:" << endl;
-		return -1;
-	}
-	
-	rc = sqlite3_finalize( stmt );
- 
-	if( rc != SQLITE_OK )
-		cout << "AddMessageToDB (IsAlreadyInTable) error:" << endl;
-	else if(isInTable)
-	{
-		cout << "AddMessageToDB (IsAlreadyInTable) error: Recored already in table." << endl;
-		return -1;
-	}
-	
-	// Create SQL statement
-	sql = "INSERT INTO achives (message, sended, cenosred, loaded) VALUES (?,?, ?, ?)";
+	sql = "INSERT INTO achives (message, sended, censored, loaded) VALUES (?,?, ?, ?)";
 
 	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
 
@@ -161,6 +123,31 @@ bool DBAchivesAccess::ClearAchivesTable()
 	}
 	
 	return true;
+}
+
+int DBAchivesAccess::FindMessage(string message, string sended)
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+	bool isInTable = false;
+	sqlite3_stmt* stmt = 0;
+		
+	// Create SQL statement
+	sql = "SELECT id FROM achives WHERE message = \'" + message + "\' AND sended = \'" + sended + "\' ;";
+	
+	int newId;
+	
+	rc = sqlite3_exec(db, sql.c_str(), GetIdFromDB,&newId, &zErrMsg);
+	
+	if( rc != SQLITE_OK )
+	{
+		fprintf(stderr, "SQL GetIdFromDB error: %s\n", zErrMsg);
+		sqlite3_free(zErrMsg);
+		return -1;
+	} 
+	else
+			return newId;
 }
 
 std::string DBAchivesAccess::GetMessage(int id2)

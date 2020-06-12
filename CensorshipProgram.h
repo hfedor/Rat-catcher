@@ -2,9 +2,11 @@
 #include <iostream>
 #include <list>
 #include <fstream>
+#include <chrono>
 
 #include "DBAccess.h"
 #include "DBMessageAccess.h"
+#include "DBAchivesAccess.h"
 
 /*
 	Cunsorship Program
@@ -17,6 +19,7 @@ private:
 	std::list<Forbiden> forbidens;
 	std::string message = "";
 	std::string censored = "";
+	std::string loaded = "";
 public:
 	CensorshipProgram();
 	CensorshipProgram(int forbiden_numb);
@@ -31,3 +34,5 @@ public:
 	void printMessage();
 	void printCensored();
 };
+
+std::string return_current_time_and_date();

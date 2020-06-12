@@ -11,6 +11,7 @@
 
 #include "DBAccess.h"
 #include "DBMessageAccess.h"
+#include "DBAchivesAccess.h"
 #include "Sentence1.h"
 #include "Sentence2.h"
 #include "Sentence3.h"
@@ -24,9 +25,7 @@ private:
 	std::string message = "";
 	int char_limit = 500;
 	std::string file_name = "messeges.txt";	// name of text file where messenger sends messages
-	std::chrono::steady_clock::time_point generate_start = std::chrono::steady_clock::now();
-	std::chrono::steady_clock::time_point generate_end;
-	std::chrono::steady_clock::time_point send;
+	std::string sended;
 public:
 	Messenger(std::string messanger_name);
 	void generateMessage();
