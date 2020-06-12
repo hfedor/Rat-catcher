@@ -519,8 +519,19 @@ void DBAchivesAccess::SetMessage(int id, std::string message)
 
 void DBAchivesAccess::SetSended(int id, string sended)
 {
-	SetRecord(id, 1, "sended", sended);
+	SetRecord(id, 2, "sended", sended);
 }
+
+void DBAchivesAccess::SetCensored(int id, std::string cenored)
+{
+	SetRecord(id, 3, "censored", cenored);
+}
+
+void DBAchivesAccess::SetLoaded(int id, string loaded)
+{
+	SetRecord(id, 4, "loaded", loaded	);
+}
+
 
 void DBAchivesAccess::SetRecord(int id, int columnx, std::string column, std::string new_value)
 {
