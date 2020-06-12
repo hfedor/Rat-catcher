@@ -43,17 +43,18 @@ void test21::consumer()
 	{
 		std::cout << std::endl << "I am consumer" << std::endl;
 	
-		sem_wait(test21::mutex); // We eneter the section
+		//sem_wait(test21::mutex); // We eneter the section
 		
-		cp.loadMessage("messages_test.txt");
+		//cp.loadMessage("messages_test.txt");
+		cp.loadMessage();
 		
 		sem_post(test21::mutex); // We leave the section
 		
-		//cp.printMessage();
+		cp.printMessage();
 		
 		cp.censureMessage();
-		//cout << "censored:" << endl;
-		//cp.printCensored();
+		cout << "censored:" << endl;
+		cp.printCensored();
 	}
 }
 void test21::producer()
@@ -66,13 +67,14 @@ void test21::producer()
 	
 		messenger.generateMessage();
 		
-		//cout << messenger << endl;
+		cout << messenger << endl;
 		
-		sem_wait(test21::mutex); // We eneter the section
+		//sem_wait(test21::mutex); // We eneter the section
 		
-		messenger.sendMessage("messages_test.txt");
+		//messenger.sendMessage("messages_test.txt");
+		messenger.sendMessage();
 		
-		sem_post(test21::mutex); // We leave the section
+		//sem_post(test21::mutex); // We leave the section
 	}
 }
 

@@ -18,6 +18,7 @@ class CensorshipProgram{
 private:
 	std::list<Forbiden> forbidens;
 	std::string message = "";
+	std::string sended = "";
 	std::string censored = "";
 	std::string loaded = "";
 public:

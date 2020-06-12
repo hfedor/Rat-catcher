@@ -75,10 +75,18 @@ std::string CensorshipProgram::loadMessage()
 	int  id = mess_id.front();
 	
 	message = dbma.GetMessage(id);
+	sended = dbma.GetMessageSended(id);
 	
 	dbma.RemoveMessageFromDB(id);
 	
 	loaded	= return_current_time_and_date();
+	
+	DBAchivesAccess dbaa("achives.db");
+	
+	id = dbaa.FindMessage(message, sended);
+	
+	dbaa.SetCensored(id, censored);
+	dbaa.SetLoaded(id, loaded);
 	
 	return message;
 }
@@ -87,7 +95,7 @@ std::string CensorshipProgram::loadMessage(std::string file_name)
 {
 	message = "";
 	std::fstream file;
-	string line;
+	string line = "";
 	string upload;
 	file.open( file_name, ios::in);
 	if( file.good() != true )
@@ -96,18 +104,26 @@ std::string CensorshipProgram::loadMessage(std::string file_name)
 		return "";
 	}
 	
-	getline(file,line);
+	file.seekg(0, ios::end);  
+	if (file.tellg() == 0) {    
+		cout << "Empty! file" << endl;
+		return "";
+	}
+	
+	while(line == "")
+		getline(file,line);
+	
 	if(line != "<message>")
 	{
 		file.close();
-		cout << "Invalid message!" << endl;
+		cout << "Invalid message1!" << line << " != <message>" << endl;
 		return "";
 	}
 	getline(file,line);
 	if(line != "sender:")
 	{
 		file.close();
-		cout << "Invalid message!" << endl;
+		cout << "Invalid message2!" << endl;
 		return "";
 	}
 	getline(file,line);
@@ -115,10 +131,12 @@ std::string CensorshipProgram::loadMessage(std::string file_name)
 	if(line != "sended:")
 	{
 		file.close();
-		cout << "Invalid message!" << endl;
+		cout << "Invalid message3!" << endl;
 		return "";
 	}
+	
 	getline(file,line);
+	sended = line;
 	while(getline(file,line))
 	{
 		if(line == "</message>")
