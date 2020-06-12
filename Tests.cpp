@@ -4,6 +4,7 @@ using namespace std;
 
 bool Tests::testAll()
 {
+	initializeMutex();
     try
 	{
 		DBATests();
@@ -18,6 +19,11 @@ bool Tests::testAll()
 	}
 	cout << "All ok!" << endl;
 	return true;
+}
+
+void Tests::initializeMutex()
+{
+	sem_init(Tests::mutex, 1, 1); // First argument is a pointer to our mutex, second one is wether its between processes or threads, third one is init value
 }
 
 bool Tests::DBATests()
@@ -164,7 +170,11 @@ bool Tests::CensorshipTests()
 	
 	cp.printForbidens();
 	
+	sem_wait(Tests::mutex); // We eneter the section
+	
 	cp.loadMessage("messages_test.txt");
+	
+	sem_post(Tests::mutex); // We leave the section
 	
 	cp.printMessage();
 	
@@ -181,7 +191,11 @@ bool Tests::MessengerTests()
 	
 	cout << messenger << endl;
 	
+	sem_wait(Tests::mutex); // We eneter the section
+	
 	messenger.sendMessage("messages_test.txt"	);
+	
+	sem_post(Tests::mutex); // We leave the section
 	
 	Messenger messenger2("Krzys");
 	
@@ -189,7 +203,11 @@ bool Tests::MessengerTests()
 	
 	cout << messenger2 << endl;
 	
+	sem_wait(mutex); // We eneter the section
+	
 	messenger2.sendMessage("messages_test.txt"	);
+	
+	sem_post(mutex); // We leave the section
 }
 
 ostream & operator<< (ostream &out, const exceptionData &exc)

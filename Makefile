@@ -1,7 +1,7 @@
 CXX = g++
 
 all: DBAccess.o Sentence.o Sentence1.o Sentence2.o Sentence3.o SentenceGenerator.o Messenger.o CensorshipProgram.o Tests.o main.o
-	$(CXX) DBAccess.o Sentence.o Sentence1.o Sentence2.o Sentence3.o SentenceGenerator.o Messenger.o CensorshipProgram.o Tests.o main.o -l sqlite3 -o test
+	$(CXX) DBAccess.o Sentence.o Sentence1.o Sentence2.o Sentence3.o SentenceGenerator.o Messenger.o CensorshipProgram.o Tests.o main.o -l sqlite3 -pthread -o test
 
 DBAccess.o: DBAccess.cpp DBAccess.h
 	$(CXX) DBAccess.cpp -c -o DBAccess.o
@@ -23,9 +23,7 @@ CensorshipProgram.o: CensorshipProgram.cpp CensorshipProgram.h DBAccess.h
 
 Messenger.o: Messenger.cpp Messenger.h DBAccess.h Sentence1.h Sentence2.h Sentence3.h
 	$(CXX) Messenger.cpp -c -o Messenger.o
-	
-processes.o: processes.cpp 
-	$(CXX) processes.cpp -c -o processes.o
+
 	
 SentenceGenerator.o: SentenceGenerator.cpp SentenceGenerator.h Sentence1.h
 	$(CXX) SentenceGenerator.cpp -c -o SentenceGenerator.o

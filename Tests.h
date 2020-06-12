@@ -8,17 +8,31 @@
 #include "SentenceGenerator.h"
 #include "CensorshipProgram.h"
 #include "Messenger.h"
-
+#include <semaphore.h>
+#include <signal.h>
+#include <pthread.h> 
+#include <unistd.h> 
 #include <iostream>
+#include <sys/stat.h>
+
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <cstring>
+#include <fcntl.h>
+#include <sys/mman.h>
 
 class Tests
 {
+private:
+	sem_t* mutex;
     public:
         bool testAll();
 		bool DBATests();
 		bool SentencesTests();
 		bool CensorshipTests();
 		bool MessengerTests();
+		void initializeMutex();
 };
 
 struct exceptionData
