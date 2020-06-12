@@ -84,6 +84,14 @@ std::string CensorshipProgram::loadMessage(std::string file_name)
 		return "";
 	}
 	getline(file,line);
+	getline(file,line);
+	if(line != "sended:")
+	{
+		file.close();
+		cout << "Invalid message!" << endl;
+		return "";
+	}
+	getline(file,line);
 	while(getline(file,line))
 	{
 		if(line == "</message>")

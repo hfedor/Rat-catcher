@@ -2,6 +2,16 @@
 
 using namespace std;
 
+std::string return_current_time_and_date()
+	{
+		auto now = std::chrono::system_clock::now();
+		auto in_time_t = std::chrono::system_clock::to_time_t(now);
+		
+		std::stringstream ss;
+		ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
+		return ss.str();
+	}
+
 Messenger::Messenger(string messanger_name)
 {
 	name = messanger_name;
@@ -60,41 +70,30 @@ void Messenger::generateMessage()
 				message += tmp;
 		}
 	}
+	
+	generate_end = std::chrono::steady_clock::now();
 }
 
 bool Messenger::sendMessage()
 {
-	/*
-	std::ofstream file;
-	file.open( file_name, std::ofstream::out | std::ofstream::app );
+	std::fstream file;
+	file.open( file_name, std::ios::out  | ios::app);
 	if( file.good() != true )
 	{
 		cout << "Cant't open the file \"" << file_name  << "\"!" << std::endl;
-		file.close();
 		return false;
 	}
 	
-	file.seekp( 0, ios_base::end );
-	file <<*this << endl;
+	file << *this << endl;
 	
-	file.close();
 	return true;
-	*/
-	
-	FILE * file;
-	
-	file = fopen (file_name.c_str(),"a");// use "a" for append, "w" to overwrite, previous content will be deleted
-	
-	fprintf(file,"%s", printMessage().c_str());// newline
-
-	fclose (file); // must close after opening
 }
 
 
 bool Messenger::sendMessage(string file_name)
 {
 	std::fstream file;
-	file.open( file_name, std::ios::out );
+	file.open( file_name, std::ios::out  | ios::app);
 	if( file.good() != true )
 	{
 		cout << "Cant't open the file \"" << file_name  << "\"!" << std::endl;
@@ -125,7 +124,13 @@ ostream & operator<< ( ostream &out, Messenger &messenger)
 	out << "<message>\n";
 	out << "sender:\n";
 	out << messenger.name << "\n"; 
-    out << messenger.message << "\n"; 
+	out << "sended:\n";
+	
+    //std::time_t now_c = chrono::system_clock::to_time_t(messenger.send);
+    //out << std::put_time(std::localtime(&now_c), "%F %T") << '\n';
+    out << return_current_time_and_date() << "\n";
+	//cout << time_point_cast<nanoseconds>(messenger.send) << endl;
+	out << messenger.message << "\n";
 	out << "</message>" << endl;
     return out;
 }

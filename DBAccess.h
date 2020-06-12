@@ -103,6 +103,24 @@ class DBAccess
 		void SetConjunctiveFrequency(int conjunctive_id, int frequency); // set new path to file of conjunctive copy with gicen ID
 		void SetConjunctiveRecord(int conjunctive_id, int columnx, std::string column, std::string new_value); // set new given value of given column in conjunctive with gicen ID
 		
+		DBMessegesAccess(std::string db_file_name);
+		int AddMessageToDB(std::string message, int sended); // add noun with gien datas to database
+		bool BuildMessageTable(); // build  noun table
+		bool ClearMessagesTable(); // remove all records from tasks table
+		std::string GetMessage(int message_id); // get path to file of message with given ID
+		int GetMessageFrequency(int message_id); // get path to file of message with given ID
+		std::string GetMessagesRecord(int message_id, int column);  // get record from given column from node with given ID
+		bool GetMessagesInfoFromDB(std::string file_name); // get Inforamtions about all message and put it to file with given name
+		bool GetMessageInfoFromDB(int message_id, std::string file_name); // get Inforamtions about message with given ID and put it to file with given name
+		std::vector<int> GetMessagesIndexes(); // get vector of tasks indexes
+		std::ostream & GetMessagesInfoFromDB(std::ostream &out); // get Inforamtions about all tasks and put it to given stream
+		std::ostream & GetMessageInfoFromDB(int message_id, std::ostream &out); // get Inforamtions about message with given ID and put it to given stream
+		std::string RandomMessageFromDB();
+		bool RemoveMessageFromDB(int message_id); // remove message with given ID from database and return if removing sucesed
+		void SetMessage(int message_id, std::string message); // set new path to file of message copy with gicen ID
+		void SetMessageFrequency(int message_id, int frequency); // set new path to file of message copy with gicen ID
+		void SetMessageRecord(int message_id, int columnx, std::string column, std::string new_value); // set new given value of given column in message with gicen ID
+		
 		~DBAccess();
 };
 	
