@@ -4,45 +4,10 @@ using namespace std;
 
 bool Tests::testAll()
 {
-	initializeMutex();
-    	try
-	{
-		pid_t process_id_1;
-		pid_t process_id_2;
-		
-		process_id_1 = fork(); // double fork
-		process_id_2 = fork();
-		
-		if(process_id_1 == 0)
-		{
-			if(process_id_2 == 0)
-				MessengerTests(); // producer
-			else if(process_id_2 > 0)
-				Tests::archiveTests(); // archive client
-		}
-			
-		else if(process_id_1 > 0)
-		{
-			if(process_id_2 == 0)
-				CensorshipTests(); // client
-		}
-		
-		else if(process_id_1 < 0)
-			std::cout << "error" << std::endl;
-		else if(process_id_2 < 0)
-			std::cout << "error" << std::endl;
-		//DBATests();
-		//SentencesTests();
-		
-		
-	}
-	catch(exceptionData exc)
-	{
-		cout << exc << endl;
-		return false;
-	}
-	cout << "All ok!" << endl;
-	return true;
+	//synchroTests();
+	
+	MessengerTests();
+	CensorshipTests();
 }
 
 void Tests::initializeMutex()
@@ -195,7 +160,7 @@ bool Tests::CensorshipTests()
 {
 	std::cout << std::endl << "I am consumer" << std::endl;
 	CensorshipProgram cp;
-	
+	/*
 	cp.generateForbidens(10);
 	
 	cp.printForbidens();
@@ -205,6 +170,14 @@ bool Tests::CensorshipTests()
 	cp.loadMessage("messages_test.txt");
 	
 	sem_post(Tests::mutex); // We leave the section
+	
+	cp.printMessage();
+	
+	cp.censureMessage();
+	cout << "censored:" << endl;
+	cp.printCensored();
+	*/
+	cp.loadMessage();
 	
 	cp.printMessage();
 	
@@ -240,6 +213,17 @@ bool Tests::MessengerTests()
 	messenger2.sendMessage("messages_test.txt"	);
 	
 	sem_post(mutex); // We leave the section
+	
+	
+	
+	Messenger messenger3("Hubik");
+	
+	messenger3.generateMessage();
+	
+	cout << messenger3 << endl;
+	
+	messenger3.sendMessage();
+	
 }
 
 ostream & operator<< (ostream &out, const exceptionData &exc)
@@ -254,4 +238,47 @@ exceptionData PreperExceptionData(string className, string functionName, string 
     exc.thrownFunction = functionName;
     exc.thrownStatement = statement;
     return exc;
+}
+
+bool Tests::synchroTests()
+{
+	initializeMutex();
+    	try
+	{
+		pid_t process_id_1;
+		pid_t process_id_2;
+		
+		process_id_1 = fork(); // double fork
+		process_id_2 = fork();
+		
+		if(process_id_1 == 0)
+		{
+			if(process_id_2 == 0)
+				MessengerTests(); // producer
+			else if(process_id_2 > 0)
+				Tests::archiveTests(); // archive client
+		}
+			
+		else if(process_id_1 > 0)
+		{
+			if(process_id_2 == 0)
+				CensorshipTests(); // client
+		}
+		
+		else if(process_id_1 < 0)
+			std::cout << "error" << std::endl;
+		else if(process_id_2 < 0)
+			std::cout << "error" << std::endl;
+		//DBATests();
+		//SentencesTests();
+		
+		
+	}
+	catch(exceptionData exc)
+	{
+		cout << exc << endl;
+		return false;
+	}
+	cout << "All ok!" << endl;
+	return true;
 }

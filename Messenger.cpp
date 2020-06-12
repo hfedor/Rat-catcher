@@ -18,13 +18,6 @@ Messenger::Messenger(string messanger_name)
 	generateMessage();
 }
 
-Messenger::Messenger(std::string messanger_name, int synchronize)
-{
-	synchornize_mode = synchronize;
-	name = messanger_name;
-	generateMessage();
-}
-
 void Messenger::generateMessage()
 {
 	DBAccess  dba("sentenceGenerator.db");
@@ -83,24 +76,9 @@ void Messenger::generateMessage()
 
 bool Messenger::sendMessage()
 {
-	if(synchornize_mode == 1)
-	{
-		DBMessageAccess dbma("messages.db");
+	DBMessageAccess dbma("messages.db");
 		
-		dbma.AddMessageToDB(message, return_current_time_and_date());
-	}
-	else
-	{
-		std::fstream file;
-		file.open( file_name, std::ios::out  | ios::app);
-		if( file.good() != true )
-		{
-			cout << "Cant't open the file \"" << file_name  << "\"!" << std::endl;
-			return false;
-		}
-		
-		file << *this << endl;
-	}
+	dbma.AddMessageToDB(message, return_current_time_and_date());
 	
 	return true;
 }

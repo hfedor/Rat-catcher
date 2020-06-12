@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include "DBAccess.h"
+#include "DBMessageAccess.h"
 
 /*
 	Cunsorship Program
@@ -21,6 +22,7 @@ public:
 	std::string addForbiden(int words_numb);
 	std::string censureMessage();
 	bool checkWord(std::string);
+	std::string loadMessage();
 	std::string loadMessage(std::string file_name);
 	void generateForbidens();
 	void generateForbidens(int forbiden_numb);

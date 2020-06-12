@@ -21,7 +21,7 @@ Sentence2.o: Sentence2.cpp Sentence2.h Sentence.h
 Sentence3.o: Sentence3.cpp Sentence3.h Sentence.h
 	$(CXX) Sentence3.cpp -c -o Sentence3.o
 	
-CensorshipProgram.o: CensorshipProgram.cpp CensorshipProgram.h DBAccess.h
+CensorshipProgram.o: CensorshipProgram.cpp CensorshipProgram.h DBAccess.h DBMessageAccess.h
 	$(CXX) CensorshipProgram.cpp -c -o CensorshipProgram.o
 
 Messenger.o: Messenger.cpp Messenger.h DBAccess.h DBMessageAccess.h Sentence1.h Sentence2.h Sentence3.h

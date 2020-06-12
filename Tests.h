@@ -34,6 +34,7 @@ private:
 		bool MessengerTests();
 		void initializeMutex();
 		bool archiveTests();
+		bool synchroTests();
 };
 
 struct exceptionData

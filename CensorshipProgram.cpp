@@ -46,6 +46,8 @@ std::string CensorshipProgram::censureMessage()
 			censored += message[i];
 		}
 	}
+	
+	return censored;
 }
 
 bool  CensorshipProgram::checkWord(string word)
@@ -55,6 +57,22 @@ bool  CensorshipProgram::checkWord(string word)
 			if(w == word)
 				return true;
 	return false;
+}
+
+std::string CensorshipProgram::loadMessage()
+{
+	message = "";
+	DBMessageAccess dbma("messages.db");
+	
+	vector<int> mess_id = dbma.GetMessagesIndexes();
+	
+	int  id = mess_id.front();
+	
+	message = dbma.GetMessage(id);
+	
+	dbma.RemoveMessageFromDB(id);
+	
+	return message;
 }
 
 std::string CensorshipProgram::loadMessage(std::string file_name)

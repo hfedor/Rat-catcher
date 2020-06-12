@@ -92,7 +92,7 @@ int  DBMessageAccess::AddMessageToDB(string message, string sended)
 	}
 	
 	// Create SQL statement
-	sql = "SELECT id FROM messages WHERE message = \'" + message + "\' AND sended = " + sended + " ;";
+	sql = "SELECT id FROM messages WHERE message = \'" + message + "\' AND sended = \'" + sended + "\' ;";
 	
 	int newId;
 	
@@ -117,7 +117,7 @@ bool	DBMessageAccess::BuildMessagesTable()
 	sqlite3_stmt* stmt = 0;
 	
 	/* Create SQL statement */
-	sql = "CREATE TABLE if not exists \"messages\" ( \"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, \"message\" TEXT NOT NULL,\"sended\"	INTEGER NOT NULL DEFAULT 0);";
+	sql = "CREATE TABLE if not exists  \"messages\" ( \"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, \"message\"	TEXT NOT NULL, \"sended\"	INTEGER NOT NULL DEFAULT 0);";
 	
 	rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
 
@@ -164,9 +164,9 @@ std::string DBMessageAccess::GetMessage(int id)
 	return GetMessagesRecord(id,1);
 }
 
-int DBMessageAccess::GetMessageSended(int id)
+std::string DBMessageAccess::GetMessageSended(int id)
 {
-	return stoi(GetMessagesRecord(id,2));
+	return GetMessagesRecord(id,2);
 }
 
 string DBMessageAccess::GetMessagesRecord(int id, int column)

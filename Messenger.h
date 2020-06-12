@@ -26,10 +26,8 @@ private:
 	std::chrono::steady_clock::time_point generate_start = std::chrono::steady_clock::now();
 	std::chrono::steady_clock::time_point generate_end;
 	std::chrono::steady_clock::time_point send;
-	int synchornize_mode = 0;
 public:
 	Messenger(std::string messanger_name);
-	Messenger(std::string messanger_name, int synchronize);
 	void generateMessage();
 	bool sendMessage(); 
 	bool sendMessage(std::string file_name); 
