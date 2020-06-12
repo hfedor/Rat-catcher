@@ -164,6 +164,14 @@ std::string CensorshipProgram::loadMessage(std::string file_name)
 			uploaded_file.close();
 			file.close();
 			loaded	= return_current_time_and_date();
+			
+			DBAchivesAccess dbaa("achives.db");
+	
+			int id = dbaa.FindMessage(message, sended);
+			
+			dbaa.SetCensored(id, censored);
+			dbaa.SetLoaded(id, loaded);
+			
 			return message;
 		}
 		else if(line == "<message>")

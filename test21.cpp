@@ -3,7 +3,7 @@ using namespace std;
 
 void test21::test()
 {
-	initializeMutex();
+	/*initializeMutex();
 
 	pid_t process_id_1;
 	
@@ -23,7 +23,40 @@ void test21::test()
 	else if(process_id_1 < 0)
 		std::cout << "error" << std::endl;
 
-
+	*/
+	CensorshipProgram cp;
+	
+	cp.generateForbidens(10);
+	
+	cp.printForbidens();
+	
+	Messenger messenger("Producent");
+	
+	while(1)
+	{
+		std::cout << std::endl << "I am producer" << std::endl;
+	
+		messenger.generateMessage();
+		
+		cout << messenger << endl;
+		
+		messenger.sendMessage();
+		
+		std::cout << std::endl << "I am consumer" << std::endl;
+	
+		//sem_wait(test21::mutex); // We eneter the section
+		
+		//cp.loadMessage("messages_test.txt");
+		cp.loadMessage();
+		
+		sem_post(test21::mutex); // We leave the section
+		
+		cp.printMessage();
+		
+		cp.censureMessage();
+		cout << "censored:" << endl;
+		//cp.printCensored();
+	}
 }
 
 void test21::initializeMutex()
