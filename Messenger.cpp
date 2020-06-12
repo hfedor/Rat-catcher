@@ -32,6 +32,8 @@ void Messenger::generateMessage()
 {
 	DBAccess  dba("sentenceGenerator.db");
 	
+	message = "";
+	
 	std::random_device rd;
     std::default_random_engine e2(rd()) ;
     std::uniform_real_distribution<> dist1(1, 4);
@@ -94,6 +96,8 @@ bool Messenger::sendMessage()
 	
 	dbaa.AddMessageToDB(message,sended,"","");
 	
+	message = "";
+	
 	return true;
 }
 
@@ -114,6 +118,8 @@ bool Messenger::sendMessage(string file_name)
 	DBAchivesAccess dbaa("achives.db");
 	
 	dbaa.AddMessageToDB(message,sended,"","");
+	
+	message = "";
 	
 	return true;
 }

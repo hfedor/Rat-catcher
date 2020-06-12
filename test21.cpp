@@ -49,19 +49,11 @@ void test21::consumer()
 		
 		sem_post(test21::mutex); // We leave the section
 		
-		cp.printMessage();
+		//cp.printMessage();
 		
 		cp.censureMessage();
-		cout << "censored:" << endl;
-		cp.printCensored();
-		
-		cp.loadMessage();
-		
-		cp.printMessage();
-		
-		cp.censureMessage();
-		cout << "censored:" << endl;
-		cp.printCensored();
+		//cout << "censored:" << endl;
+		//cp.printCensored();
 	}
 }
 void test21::producer()
@@ -74,7 +66,7 @@ void test21::producer()
 	
 		messenger.generateMessage();
 		
-		cout << messenger << endl;
+		//cout << messenger << endl;
 		
 		sem_wait(test21::mutex); // We eneter the section
 		

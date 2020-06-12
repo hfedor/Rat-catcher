@@ -51,6 +51,8 @@ std::string CensorshipProgram::censureMessage()
 	
 	//dbaa.FindMessage(message,sended);
 	
+	message = "";
+	
 	return censored;
 }
 
@@ -83,6 +85,7 @@ std::string CensorshipProgram::loadMessage()
 
 std::string CensorshipProgram::loadMessage(std::string file_name)
 {
+	message = "";
 	std::fstream file;
 	string line;
 	string upload;
