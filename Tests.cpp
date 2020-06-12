@@ -8,8 +8,8 @@ bool Tests::testAll()
 	{
 		DBATests();
 		SentencesTests();
-		CensorshipTests();
 		MessengerTests();
+		CensorshipTests();
 	}
 	catch(exceptionData exc)
 	{
@@ -163,6 +163,14 @@ bool Tests::CensorshipTests()
 	cp.generateForbidens(10);
 	
 	cp.printForbidens();
+	
+	cp.loadMessage("messages_test.txt");
+	
+	cp.printMessage();
+	
+	cp.censureMessage();
+	cout << "censored:" << endl;
+	cp.printCensored();
 }
 
 bool Tests::MessengerTests()

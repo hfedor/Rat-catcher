@@ -19,9 +19,12 @@ public:
 	CensorshipProgram();
 	CensorshipProgram(int forbiden_numb);
 	std::string addForbiden(int words_numb);
-	std::string checkMessage();
+	std::string censureMessage();
+	bool checkWord(std::string);
 	std::string loadMessage(std::string file_name);
 	void generateForbidens();
 	void generateForbidens(int forbiden_numb);
 	void printForbidens();
+	void printMessage();
+	void printCensored();
 };

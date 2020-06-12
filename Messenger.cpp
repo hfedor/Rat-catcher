@@ -65,15 +65,15 @@ void Messenger::generateMessage()
 bool Messenger::sendMessage()
 {
 	std::fstream file;
-	file.open( file_name, std::ios::app | ios::out );
+	file.open( file_name, ios::out | ios::app );
 	if( file.good() != true )
 	{
 		cout << "Cant't open the file \"" << file_name  << "\"!" << std::endl;
 		return false;
 	}
 	
-	file << this << endl;
-    file.flush();
+	file.seekp( 0, ios_base::end );
+	file <<*this << endl;
 	
 	file.close();
 	return true;

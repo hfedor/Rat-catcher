@@ -31,13 +31,74 @@ std::string CensorshipProgram::addForbiden(int words_numb)
 	return result;	
 }
 
-std::string CensorshipProgram::checkMessage()
+std::string CensorshipProgram::censureMessage()
 {
+	string s = "";
+	for(int i = 0 ; i < message.length(); i ++)
+	{
+		if( (message[i] >= 65 && message[i] <= 90) || (message[i] >= 97 && message[i] <= 122) )
+			s += message[i];
+		else 
+		{
+			if(!checkWord(s))
+				censored += s;
+			s = "";
+			censored += message[i];
+		}
+	}
+}
+
+bool  CensorshipProgram::checkWord(string word)
+{
+	for(Forbiden f : forbidens)
+		for(string w : f.words)
+			if(w == word)
+				return true;
+	return false;
 }
 
 std::string CensorshipProgram::loadMessage(std::string file_name)
 {
+	std::fstream file;
+	string line;
+	file.open( file_name, ios::in);
+	if( file.good() != true )
+	{
+		cout << "Cant't open the file \"" << file_name  << "\"!" << std::endl;
+		return "";
+	}
 	
+	getline(file,line);
+	if(line != "<message>")
+	{
+		file.close();
+		cout << "Invalid message!" << endl;
+		return "";
+	}
+	getline(file,line);
+	if(line != "sender:")
+	{
+		file.close();
+		cout << "Invalid message!" << endl;
+		return "";
+	}
+	getline(file,line);
+	while(getline(file,line))
+	{
+		if(line == "</message>")
+		{
+			file.close();
+			return message;
+		}
+		if(line == "</message>")
+		{
+			cout << "Invalid message!" << endl;
+			file.close();
+			return "";
+		}
+		
+		message += line;
+	}
 }
 
 void CensorshipProgram::generateForbidens()
@@ -74,4 +135,14 @@ void CensorshipProgram::printForbidens()
 		}
 		cout << "}" << endl;
 	}
+}
+
+void CensorshipProgram::printMessage()
+{
+	cout << message << endl;
+}
+
+void CensorshipProgram::printCensored()
+{
+	cout << censored << endl;
 }
