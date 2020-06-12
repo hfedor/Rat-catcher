@@ -33,6 +33,7 @@ private:
 		bool CensorshipTests();
 		bool MessengerTests();
 		void initializeMutex();
+		bool archiveTests();
 };
 
 struct exceptionData

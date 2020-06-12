@@ -5,12 +5,36 @@ using namespace std;
 bool Tests::testAll()
 {
 	initializeMutex();
-    try
+    	try
 	{
-		DBATests();
-		SentencesTests();
-		MessengerTests();
-		CensorshipTests();
+		pid_t process_id_1;
+		pid_t process_id_2;
+		
+		process_id_1 = fork(); // double fork
+		process_id_2 = fork();
+		
+		if(process_id_1 == 0)
+		{
+			if(process_id_2 == 0)
+				MessengerTests(); // producer
+			else if(process_id_2 > 0)
+				Tests::archiveTests(); // archive client
+		}
+			
+		else if(process_id_1 > 0)
+		{
+			if(process_id_2 == 0)
+				CensorshipTests(); // client
+		}
+		
+		else if(process_id_1 < 0)
+			std::cout << "error" << std::endl;
+		else if(process_id_2 < 0)
+			std::cout << "error" << std::endl;
+		//DBATests();
+		//SentencesTests();
+		
+		
 	}
 	catch(exceptionData exc)
 	{
@@ -24,6 +48,11 @@ bool Tests::testAll()
 void Tests::initializeMutex()
 {
 	sem_init(Tests::mutex, 1, 1); // First argument is a pointer to our mutex, second one is wether its between processes or threads, third one is init value
+}
+
+bool Tests::archiveTests()
+{
+	std::cout << std::endl << "I am archive " << std::endl;
 }
 
 bool Tests::DBATests()
@@ -164,6 +193,7 @@ bool Tests::SentencesTests()
 
 bool Tests::CensorshipTests()
 {
+	std::cout << std::endl << "I am consumer" << std::endl;
 	CensorshipProgram cp;
 	
 	cp.generateForbidens(10);
@@ -185,6 +215,8 @@ bool Tests::CensorshipTests()
 
 bool Tests::MessengerTests()
 {
+	std::cout << std::endl << "I am producer" << std::endl;
+	
 	Messenger messenger("Kamilek");
 	
 	messenger.generateMessage();
