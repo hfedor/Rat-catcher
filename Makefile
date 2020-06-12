@@ -18,6 +18,9 @@ Sentence2.o: Sentence2.cpp Sentence2.h Sentence.h
 Sentence3.o: Sentence3.cpp Sentence3.h Sentence.h
 	$(CXX) Sentence3.cpp -c -o Sentence3.o
 	
+processes.o: processes.cpp 
+	$(CXX) processes.cpp -c -o processes.o
+	
 SentenceGenerator.o: SentenceGenerator.cpp SentenceGenerator.h Sentence1.h
 	$(CXX) SentenceGenerator.cpp -c -o SentenceGenerator.o
 
