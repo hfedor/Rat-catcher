@@ -182,6 +182,14 @@ bool Tests::MessengerTests()
 	cout << messenger << endl;
 	
 	messenger.sendMessage("messages_test.txt"	);
+	
+	Messenger messenger2("Krzys");
+	
+	messenger2.generateMessage();
+	
+	cout << messenger2 << endl;
+	
+	messenger2.sendMessage("messages_test.txt"	);
 }
 
 ostream & operator<< (ostream &out, const exceptionData &exc)

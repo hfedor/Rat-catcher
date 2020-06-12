@@ -61,6 +61,7 @@ std::string CensorshipProgram::loadMessage(std::string file_name)
 {
 	std::fstream file;
 	string line;
+	string upload;
 	file.open( file_name, ios::in);
 	if( file.good() != true )
 	{
@@ -87,10 +88,31 @@ std::string CensorshipProgram::loadMessage(std::string file_name)
 	{
 		if(line == "</message>")
 		{
+			message += line;
+			
+			std::ofstream uploaded_file;
+			uploaded_file.open( file_name, ios::out );
+			if( uploaded_file.good() != true )
+			{
+				cout << "Cant't open the file \"" << file_name  << "\"!" << std::endl;
+				uploaded_file.close();
+				return message;
+			}
+			
+			while(getline(file,upload))
+				if(upload == "<message>")
+				{
+					uploaded_file << upload << endl;
+					break;
+				}
+			while(getline(file,upload))
+					uploaded_file << upload << endl;
+					
+			uploaded_file.close();
 			file.close();
 			return message;
 		}
-		if(line == "</message>")
+		else if(line == "<message>")
 		{
 			cout << "Invalid message!" << endl;
 			file.close();

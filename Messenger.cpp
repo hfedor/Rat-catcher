@@ -64,11 +64,13 @@ void Messenger::generateMessage()
 
 bool Messenger::sendMessage()
 {
-	std::fstream file;
-	file.open( file_name, ios::out | ios::app );
+	/*
+	std::ofstream file;
+	file.open( file_name, std::ofstream::out | std::ofstream::app );
 	if( file.good() != true )
 	{
 		cout << "Cant't open the file \"" << file_name  << "\"!" << std::endl;
+		file.close();
 		return false;
 	}
 	
@@ -77,6 +79,15 @@ bool Messenger::sendMessage()
 	
 	file.close();
 	return true;
+	*/
+	
+	FILE * file;
+	
+	file = fopen (file_name.c_str(),"a");// use "a" for append, "w" to overwrite, previous content will be deleted
+	
+	fprintf(file,"%s", printMessage().c_str());// newline
+
+	fclose (file); // must close after opening
 }
 
 
@@ -94,6 +105,20 @@ bool Messenger::sendMessage(string file_name)
 	
 	return true;
 }
+
+std::string Messenger::	printMessage()
+{
+	string result = "";
+	result += "<message>\n";
+	result += "sender:\n";
+	result += name;
+	result += "\n"; 
+    result += message;
+	result += "\n"; 
+	result += "</message>\n";
+    return result;
+}
+	
 	
 ostream & operator<< ( ostream &out, Messenger &messenger)
 {

@@ -21,5 +21,6 @@ public:
 	void generateMessage();
 	bool sendMessage(); 
 	bool sendMessage(std::string file_name); 
+	std::string printMessage();
 	friend std::ostream & operator<< (std::ostream &out, Messenger &message);
 };
