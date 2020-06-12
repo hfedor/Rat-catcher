@@ -12,6 +12,7 @@ class Tests
     public:
         bool testAll();
 		bool DBATests();
+		bool SentencesTests();
 };
 
 struct exceptionData

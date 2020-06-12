@@ -14,5 +14,4 @@ private:
 	
 	void uploadWords();	// load words from file/db 
 public:
-		
 };

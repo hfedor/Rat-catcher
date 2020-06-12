@@ -1,7 +1,12 @@
 #include "DBAccess.h"
 
 #include <stdio.h>
-#include <bits/stdc++.h> 
+#include <bits/stdc++.h>
+
+
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
+#include <random>
 
 using namespace std;
 
@@ -15,17 +20,20 @@ DBAccess::DBAccess(string db_file_name)
 	{
 		string message = "Can't open database: ";
 		message += sqlite3_errmsg(db);
-		cout << "DBAccess: Can't open database" << endl;
+		cout << "DBAccess: " + message << endl;
 	}
-	
-	BuildNounsTable();
-	BuildVerbsTable();
-	BuildAdjectivesTable();
+	else
+	{
+		BuildNounsTable();
+		BuildVerbsTable();
+		BuildAdjectivesTable();
+		BuildConjunctivesTable();
+	}
 }
 
 // TASKS INFO COPIES:
 	// ADD TASKS:
-int  DBAccess::AddNounToDB(string noun)
+int  DBAccess::AddNounToDB(string noun, int frequency)
 {
 	char *zErrMsg = 0;
 	int rc;
@@ -34,13 +42,14 @@ int  DBAccess::AddNounToDB(string noun)
 	sqlite3_stmt* stmt = 0;
 
 	// Create SQL statement
-	sql = "SELECT * FROM nouns WHERE noun = ?";
+	sql = "SELECT * FROM nouns WHERE noun = ? AND frequency = ?";
 	
 	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
 
 	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
 	
 	sqlite3_bind_text(stmt,1,noun.c_str(),-1,0);
+	sqlite3_bind_int(stmt,2,frequency);
 
 	if( sqlite3_step( stmt ) == SQLITE_ROW ) 
 		isInTable = true;
@@ -69,13 +78,14 @@ int  DBAccess::AddNounToDB(string noun)
 	}
 	
 	// Create SQL statement
-	sql = "INSERT INTO nouns (noun) VALUES (?)";
+	sql = "INSERT INTO nouns (noun, frequency) VALUES (?,?)";
 
 	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
 
 	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
 	
 	sqlite3_bind_text(stmt,1,noun.c_str(),-1,0);
+	sqlite3_bind_int(stmt,2,frequency);
 
 	sqlite3_step( stmt );
 	sqlite3_clear_bindings( stmt );
@@ -97,7 +107,7 @@ int  DBAccess::AddNounToDB(string noun)
 	}
 	
 	// Create SQL statement
-	sql = "SELECT id FROM nouns WHERE noun = \"" + noun + "\";";
+	sql = "SELECT id FROM nouns WHERE noun = \'" + noun + "\' AND frequency = " + to_string(frequency) + " ;";
 	
 	int newId;
 	
@@ -122,12 +132,12 @@ bool	DBAccess::BuildNounsTable()
 	sqlite3_stmt* stmt = 0;
 	
 	/* Create SQL statement */
-	sql = "CREATE if not exists TABLE \"nouns\" ( \"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, \"noun\"	TEXT NOT NULL);";
+	sql = "CREATE TABLE if not exists \"nouns\" ( \"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, \"noun\" TEXT NOT NULL,\"frequency\"	INTEGER NOT NULL DEFAULT 0);";
 	
 	rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
 
 	if( rc != SQLITE_OK ){
-		cout << "BuildNounsTable error:" << endl;
+		cout << "BuildVerbsTable error: CREATE" << endl;
 		return false;
 	}
 	else
@@ -167,6 +177,11 @@ bool DBAccess::ClearNounsTable()
 std::string DBAccess::GetNoun(int id)
 {
 	return GetNounsRecord(id,1);
+}
+
+int DBAccess::GetNounFrequency(int id)
+{
+	return stoi(GetNounsRecord(id,2));
 }
 
 string DBAccess::GetNounsRecord(int id, int column)
@@ -232,7 +247,7 @@ bool DBAccess::GetNounsInfoFromDB(std::string file_name)
 	}
 	
 	// Create SQL statement
-	sql = "SELECT id, noun FROM nouns;";
+	sql = "SELECT id, noun, frequency FROM nouns;";
 	
 	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToFile, &file, &zErrMsg);
   
@@ -264,7 +279,7 @@ bool DBAccess::GetNounInfoFromDB(int id, std::string file_name)
 	}
 	
 	// Create SQL statement
-	sql = "SELECT id, noun FROM nouns\
+	sql = "SELECT id, noun, frequency FROM nouns\
 			WHERE id = ?";
 			
 	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
@@ -304,7 +319,7 @@ std::ostream & DBAccess::GetNounsInfoFromDB(std::ostream &out)
 	int rc;
 	string sql;
    
-	sql = "SELECT id, noun FROM nouns;";
+	sql = "SELECT id, noun, frequency FROM nouns;";
 		
 	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToStream, &out, &zErrMsg);
 	  
@@ -322,7 +337,7 @@ std::ostream & DBAccess::GetNounInfoFromDB(int id, std::ostream &out)
 	int rc;
 	string sql;
    
-	sql = "SELECT id, noun FROM nouns WHERE id = " + to_string(id) + ";";
+	sql = "SELECT id, noun, frequency FROM nouns WHERE id = " + to_string(id) + ";";
 		
 	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToStream, &out, &zErrMsg);
 	  
@@ -372,6 +387,90 @@ std::vector<int> DBAccess::GetNounsIndexes()
 	else 
 		return ids;
 }	
+
+string DBAccess::RandomNounFromDB()
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+	int table_size;
+	sqlite3_stmt* stmt = 0;
+	string result;
+	
+	// Create SQL statement
+	sql = "SELECT COUNT(*) FROM nouns";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+	
+	while ( sqlite3_step( stmt ) == SQLITE_ROW )
+		table_size = sqlite3_column_int(stmt, 0);
+
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "RandomNounFromDB error:" << endl;
+		return "";
+	}
+	
+	rc = sqlite3_finalize( stmt );
+ 
+	if( rc != SQLITE_OK )
+	{
+		cout << "RandomNounFromDB : Get rable size" << endl;
+		return "";
+	}
+	
+	int x = RandID(table_size);
+	
+	// Create SQL statement
+	sql = "SELECT noun FROM nouns WHERE id = ?";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+
+	sqlite3_bind_int(stmt,1,x);
+	
+	while ( sqlite3_step( stmt ) == SQLITE_ROW )
+	{
+		const unsigned char * tmp = sqlite3_column_text(stmt, 0);
+		if(tmp == NULL)
+			result = "";
+		else
+			result = std::string(reinterpret_cast<const char*>(tmp));
+    }
+
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "RandomNounFromDB error:" << endl;
+		return "";
+	}
+	
+	rc = sqlite3_finalize( stmt );
+ 
+	if( rc != SQLITE_OK )
+	{
+		cout << "RandomNounFromDB error: Get record by index." << endl;
+		return "";
+	}
+	
+	return result;
+}
 
 	// REMOVE TASKS:
 bool DBAccess::RemoveNounFromDB(int id)
@@ -430,6 +529,11 @@ bool DBAccess::RemoveNounFromDB(int id)
 void DBAccess::SetNoun(int id, std::string noun)
 {
 	SetNounRecord(id, 1, "noun", noun);
+}
+
+void DBAccess::SetNounFrequency(int id, int frequency)
+{
+	SetNounRecord(id, 1, "frequency", to_string(frequency));
 }
 
 void DBAccess::SetNounRecord(int id, int columnx, std::string column, std::string new_value)
@@ -508,8 +612,8 @@ void DBAccess::SetNounRecord(int id, int columnx, std::string column, std::strin
 
 
 // VERBS
-	// ADD VERBS:
-int  DBAccess::AddVerbToDB(string verb)
+	// ADD VERB:
+int  DBAccess::AddVerbToDB(string verb, int frequency)
 {
 	char *zErrMsg = 0;
 	int rc;
@@ -518,13 +622,14 @@ int  DBAccess::AddVerbToDB(string verb)
 	sqlite3_stmt* stmt = 0;
 
 	// Create SQL statement
-	sql = "SELECT * FROM verbs WHERE verb = ?";
+	sql = "SELECT * FROM verbs WHERE verb = ? AND frequency = ?";
 	
 	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
 
 	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
 	
 	sqlite3_bind_text(stmt,1,verb.c_str(),-1,0);
+	sqlite3_bind_int(stmt,2,frequency);
 
 	if( sqlite3_step( stmt ) == SQLITE_ROW ) 
 		isInTable = true;
@@ -553,13 +658,14 @@ int  DBAccess::AddVerbToDB(string verb)
 	}
 	
 	// Create SQL statement
-	sql = "INSERT INTO verbs (verb) VALUES (?)";
+	sql = "INSERT INTO verbs (verb, frequency) VALUES (?,?)";
 
 	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
 
 	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
 	
 	sqlite3_bind_text(stmt,1,verb.c_str(),-1,0);
+	sqlite3_bind_int(stmt,2,frequency);
 
 	sqlite3_step( stmt );
 	sqlite3_clear_bindings( stmt );
@@ -581,7 +687,7 @@ int  DBAccess::AddVerbToDB(string verb)
 	}
 	
 	// Create SQL statement
-	sql = "SELECT id FROM verbs WHERE verb = \"" + verb + "\";";
+	sql = "SELECT id FROM verbs WHERE verb = \'" + verb + "\' AND frequency = " + to_string(frequency) + " ;";
 	
 	int newId;
 	
@@ -606,7 +712,7 @@ bool	DBAccess::BuildVerbsTable()
 	sqlite3_stmt* stmt = 0;
 	
 	/* Create SQL statement */
-	sql = "CREATE TABLE if not exists \"verbs\" ( \"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, \"verb\" TEXT NOT NULL);";
+	sql = "CREATE TABLE if not exists \"verbs\" ( \"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, \"verb\" TEXT NOT NULL,\"frequency\"	INTEGER NOT NULL DEFAULT 0);";
 	
 	rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
 
@@ -632,7 +738,7 @@ bool DBAccess::ClearVerbsTable()
 	if( rc != SQLITE_OK )
 	{
 		sqlite3_free(zErrMsg);
-		cout << "ClearVerbsTable error: DELETE" << endl;
+		cout << "ClearVerbsTable error:" << endl;
 		return false;	
 	}
 	
@@ -641,7 +747,7 @@ bool DBAccess::ClearVerbsTable()
 	rc = sqlite3_exec(db, sql.c_str(), 0, 0, &zErrMsg);
 
 	if( rc != SQLITE_OK ){
-		cout << "ClearVerbsTable error: VACUUM" << endl;
+		cout << "ClearVerbsTable error:" << endl;
 		return false;
 	}
 	
@@ -651,6 +757,11 @@ bool DBAccess::ClearVerbsTable()
 std::string DBAccess::GetVerb(int id)
 {
 	return GetVerbsRecord(id,1);
+}
+
+int DBAccess::GetVerbFrequency(int id)
+{
+	return stoi(GetVerbsRecord(id,2));
 }
 
 string DBAccess::GetVerbsRecord(int id, int column)
@@ -716,7 +827,7 @@ bool DBAccess::GetVerbsInfoFromDB(std::string file_name)
 	}
 	
 	// Create SQL statement
-	sql = "SELECT id, verb FROM verbs;";
+	sql = "SELECT id, verb, frequency FROM verbs;";
 	
 	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToFile, &file, &zErrMsg);
   
@@ -748,7 +859,7 @@ bool DBAccess::GetVerbInfoFromDB(int id, std::string file_name)
 	}
 	
 	// Create SQL statement
-	sql = "SELECT id, verb FROM verbs\
+	sql = "SELECT id, verb, frequency FROM verbs\
 			WHERE id = ?";
 			
 	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
@@ -788,7 +899,7 @@ std::ostream & DBAccess::GetVerbsInfoFromDB(std::ostream &out)
 	int rc;
 	string sql;
    
-	sql = "SELECT id, verb FROM verbs;";
+	sql = "SELECT id, verb, frequency FROM verbs;";
 		
 	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToStream, &out, &zErrMsg);
 	  
@@ -806,7 +917,7 @@ std::ostream & DBAccess::GetVerbInfoFromDB(int id, std::ostream &out)
 	int rc;
 	string sql;
    
-	sql = "SELECT id, verb FROM verbs WHERE id = " + to_string(id) + ";";
+	sql = "SELECT id, verb, frequency FROM verbs WHERE id = " + to_string(id) + ";";
 		
 	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToStream, &out, &zErrMsg);
 	  
@@ -857,7 +968,93 @@ std::vector<int> DBAccess::GetVerbsIndexes()
 		return ids;
 }	
 
-	// REMOVE VERBS:
+
+string DBAccess::RandomVerbFromDB()
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+	int table_size;
+	sqlite3_stmt* stmt = 0;
+	string result;
+	
+	// Create SQL statement
+	sql = "SELECT COUNT(*) FROM verbs";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+	
+	while ( sqlite3_step( stmt ) == SQLITE_ROW )
+		table_size = sqlite3_column_int(stmt, 0);
+
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "RandomVerbFromDB error:" << endl;
+		return "";
+	}
+	
+	rc = sqlite3_finalize( stmt );
+ 
+	if( rc != SQLITE_OK )
+	{
+		cout << "RandomVerbFromDB : Get rable size" << endl;
+		return "";
+	}
+	
+	int x = RandID(table_size);
+	
+	// Create SQL statement
+	sql = "SELECT verb FROM verbs WHERE id = ?";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+
+	sqlite3_bind_int(stmt,1,x);
+	
+	while ( sqlite3_step( stmt ) == SQLITE_ROW )
+	{
+		const unsigned char * tmp = sqlite3_column_text(stmt, 0);
+		if(tmp == NULL)
+			result = "";
+		else
+			result = std::string(reinterpret_cast<const char*>(tmp));
+    }
+
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "RandomVerbFromDB error:" << endl;
+		return "";
+	}
+	
+	rc = sqlite3_finalize( stmt );
+ 
+	if( rc != SQLITE_OK )
+	{
+		cout << "RandomVerbFromDB error: Get record by index." << endl;
+		return "";
+	}
+	
+	return result;
+}
+
+
+	// REMOVE TASKS:
 bool DBAccess::RemoveVerbFromDB(int id)
 {
 	char *zErrMsg = 0;
@@ -914,6 +1111,11 @@ bool DBAccess::RemoveVerbFromDB(int id)
 void DBAccess::SetVerb(int id, std::string verb)
 {
 	SetVerbRecord(id, 1, "verb", verb);
+}
+
+void DBAccess::SetVerbFrequency(int id, int frequency)
+{
+	SetVerbRecord(id, 1, "frequency", to_string(frequency));
 }
 
 void DBAccess::SetVerbRecord(int id, int columnx, std::string column, std::string new_value)
@@ -993,7 +1195,7 @@ void DBAccess::SetVerbRecord(int id, int columnx, std::string column, std::strin
 
 // ADJECTIVES
 	// ADD ADJECTIVES:
-int  DBAccess::AddAdjectiveToDB(string adjective)
+int  DBAccess::AddAdjectiveToDB(string adjective, int frequency)
 {
 	char *zErrMsg = 0;
 	int rc;
@@ -1002,13 +1204,14 @@ int  DBAccess::AddAdjectiveToDB(string adjective)
 	sqlite3_stmt* stmt = 0;
 
 	// Create SQL statement
-	sql = "SELECT * FROM adjectives WHERE adjective = ?";
+	sql = "SELECT * FROM adjectives WHERE adjective = ? AND frequency = ?";
 	
 	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
 
 	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
 	
 	sqlite3_bind_text(stmt,1,adjective.c_str(),-1,0);
+	sqlite3_bind_int(stmt,2,frequency);
 
 	if( sqlite3_step( stmt ) == SQLITE_ROW ) 
 		isInTable = true;
@@ -1037,13 +1240,14 @@ int  DBAccess::AddAdjectiveToDB(string adjective)
 	}
 	
 	// Create SQL statement
-	sql = "INSERT INTO adjectives (adjective) VALUES (?)";
+	sql = "INSERT INTO adjectives (adjective, frequency) VALUES (?,?)";
 
 	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
 
 	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
 	
 	sqlite3_bind_text(stmt,1,adjective.c_str(),-1,0);
+	sqlite3_bind_int(stmt,2,frequency);
 
 	sqlite3_step( stmt );
 	sqlite3_clear_bindings( stmt );
@@ -1065,7 +1269,7 @@ int  DBAccess::AddAdjectiveToDB(string adjective)
 	}
 	
 	// Create SQL statement
-	sql = "SELECT id FROM adjectives WHERE adjective = \"" + adjective + "\";";
+	sql = "SELECT id FROM adjectives WHERE adjective = \'" + adjective + "\' AND frequency = " + to_string(frequency) + " ;";
 	
 	int newId;
 	
@@ -1090,12 +1294,12 @@ bool	DBAccess::BuildAdjectivesTable()
 	sqlite3_stmt* stmt = 0;
 	
 	/* Create SQL statement */
-	sql = "CREATE TABLE if not exists \"adjectives\" ( \"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, \"adjective\" TEXT NOT NULL);";
+	sql = "CREATE TABLE if not exists \"adjectives\" ( \"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, \"adjective\" TEXT NOT NULL,\"frequency\"	INTEGER NOT NULL DEFAULT 0);";
 	
 	rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
 
 	if( rc != SQLITE_OK ){
-		cout << "BuildAdjectivesTable error: CREATE" << endl;
+		cout << "BuildVerbsTable error: CREATE" << endl;
 		return false;
 	}
 	else
@@ -1116,7 +1320,7 @@ bool DBAccess::ClearAdjectivesTable()
 	if( rc != SQLITE_OK )
 	{
 		sqlite3_free(zErrMsg);
-		cout << "ClearAdjectivesTable error: DELETE" << endl;
+		cout << "ClearAdjectivesTable error:" << endl;
 		return false;	
 	}
 	
@@ -1125,7 +1329,7 @@ bool DBAccess::ClearAdjectivesTable()
 	rc = sqlite3_exec(db, sql.c_str(), 0, 0, &zErrMsg);
 
 	if( rc != SQLITE_OK ){
-		cout << "ClearAdjectivesTable error: VACUUM" << endl;
+		cout << "ClearAdjectivesTable error:" << endl;
 		return false;
 	}
 	
@@ -1135,6 +1339,11 @@ bool DBAccess::ClearAdjectivesTable()
 std::string DBAccess::GetAdjective(int id)
 {
 	return GetAdjectivesRecord(id,1);
+}
+
+int DBAccess::GetAdjectiveFrequency(int id)
+{
+	return stoi(GetAdjectivesRecord(id,2));
 }
 
 string DBAccess::GetAdjectivesRecord(int id, int column)
@@ -1200,7 +1409,7 @@ bool DBAccess::GetAdjectivesInfoFromDB(std::string file_name)
 	}
 	
 	// Create SQL statement
-	sql = "SELECT id, adjective FROM adjectives;";
+	sql = "SELECT id, adjective, frequency FROM adjectives;";
 	
 	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToFile, &file, &zErrMsg);
   
@@ -1232,7 +1441,7 @@ bool DBAccess::GetAdjectiveInfoFromDB(int id, std::string file_name)
 	}
 	
 	// Create SQL statement
-	sql = "SELECT id, adjective FROM adjectives\
+	sql = "SELECT id, adjective, frequency FROM adjectives\
 			WHERE id = ?";
 			
 	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
@@ -1272,7 +1481,7 @@ std::ostream & DBAccess::GetAdjectivesInfoFromDB(std::ostream &out)
 	int rc;
 	string sql;
    
-	sql = "SELECT id, adjective FROM adjectives;";
+	sql = "SELECT id, adjective, frequency FROM adjectives;";
 		
 	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToStream, &out, &zErrMsg);
 	  
@@ -1290,7 +1499,7 @@ std::ostream & DBAccess::GetAdjectiveInfoFromDB(int id, std::ostream &out)
 	int rc;
 	string sql;
    
-	sql = "SELECT id, adjective FROM adjectives WHERE id = " + to_string(id) + ";";
+	sql = "SELECT id, adjective, frequency FROM adjectives WHERE id = " + to_string(id) + ";";
 		
 	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToStream, &out, &zErrMsg);
 	  
@@ -1341,7 +1550,92 @@ std::vector<int> DBAccess::GetAdjectivesIndexes()
 		return ids;
 }	
 
-	// REMOVE ADJECTIVES:
+
+string DBAccess::RandomAdjectiveFromDB()
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+	int table_size;
+	sqlite3_stmt* stmt = 0;
+	string result;
+	
+	// Create SQL statement
+	sql = "SELECT COUNT(*) FROM adjectives";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+	
+	while ( sqlite3_step( stmt ) == SQLITE_ROW )
+		table_size = sqlite3_column_int(stmt, 0);
+
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "RandomAdjectiveFromDB error:" << endl;
+		return "";
+	}
+	
+	rc = sqlite3_finalize( stmt );
+ 
+	if( rc != SQLITE_OK )
+	{
+		cout << "RandomAdjectiveFromDB : Get rable size" << endl;
+		return "";
+	}
+	
+	int x = RandID(table_size);
+	
+	// Create SQL statement
+	sql = "SELECT adjective FROM adjectives WHERE id = ?";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+
+	sqlite3_bind_int(stmt,1,x);
+	
+	while ( sqlite3_step( stmt ) == SQLITE_ROW )
+	{
+		const unsigned char * tmp = sqlite3_column_text(stmt, 0);
+		if(tmp == NULL)
+			result = "";
+		else
+			result = std::string(reinterpret_cast<const char*>(tmp));
+    }
+
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "RandomAdjectiveFromDB error:" << endl;
+		return "";
+	}
+	
+	rc = sqlite3_finalize( stmt );
+ 
+	if( rc != SQLITE_OK )
+	{
+		cout << "RandomAdjectiveFromDB error: Get record by index." << endl;
+		return "";
+	}
+	
+	return result;
+}
+
+// REMOVE TASKS:
 bool DBAccess::RemoveAdjectiveFromDB(int id)
 {
 	char *zErrMsg = 0;
@@ -1393,11 +1687,15 @@ bool DBAccess::RemoveAdjectiveFromDB(int id)
 	else
 		return true;
 }
-
-	// SET VALUES:
+// SET VALUES:
 void DBAccess::SetAdjective(int id, std::string adjective)
 {
 	SetAdjectiveRecord(id, 1, "adjective", adjective);
+}
+
+void DBAccess::SetAdjectiveFrequency(int id, int frequency)
+{
+	SetAdjectiveRecord(id, 1, "frequency", to_string(frequency));
 }
 
 void DBAccess::SetAdjectiveRecord(int id, int columnx, std::string column, std::string new_value)
@@ -1474,6 +1772,587 @@ void DBAccess::SetAdjectiveRecord(int id, int columnx, std::string column, std::
 		cout << "SetAdjectiveRecord error:" << endl;
 }
 
+
+// CONJECTIVE:
+int  DBAccess::AddConjunctiveToDB(string conjunctive, int frequency)
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+	bool isInTable = false;
+	sqlite3_stmt* stmt = 0;
+
+	// Create SQL statement
+	sql = "SELECT * FROM conjunctives WHERE conjunctive = ? AND frequency = ?";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+	
+	sqlite3_bind_text(stmt,1,conjunctive.c_str(),-1,0);
+	sqlite3_bind_int(stmt,2,frequency);
+
+	if( sqlite3_step( stmt ) == SQLITE_ROW ) 
+		isInTable = true;
+
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "AddConjunctiveToDB (IsAlreadyInTable) error:" << endl;
+		return -1;
+	}
+	
+	rc = sqlite3_finalize( stmt );
+ 
+	if( rc != SQLITE_OK )
+		cout << "AddConjunctiveToDB (IsAlreadyInTable) error:" << endl;
+	else if(isInTable)
+	{
+		cout << "AddConjunctiveToDB (IsAlreadyInTable) error: Recored already in table." << endl;
+		return -1;
+	}
+	
+	// Create SQL statement
+	sql = "INSERT INTO conjunctives (conjunctive, frequency) VALUES (?,?)";
+
+	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+	
+	sqlite3_bind_text(stmt,1,conjunctive.c_str(),-1,0);
+	sqlite3_bind_int(stmt,2,frequency);
+
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{;
+		sqlite3_free(zErrMsg);
+		cout << "AddConjunctiveToDB error:" << endl;
+	}
+	
+	rc = sqlite3_finalize( stmt );
+   
+	if( rc != SQLITE_OK ){
+		cout << "AddConjunctiveToDB error:" << endl;
+		return -1;
+	}
+	
+	// Create SQL statement
+	sql = "SELECT id FROM conjunctives WHERE conjunctive = \'" + conjunctive + "\' AND frequency = " + to_string(frequency) + " ;";
+	
+	int newId;
+	
+	rc = sqlite3_exec(db, sql.c_str(), GetIdFromDB,&newId, &zErrMsg);
+	
+	if( rc != SQLITE_OK )
+	{
+		fprintf(stderr, "SQL GetIdFromDB error: %s\n", zErrMsg);
+		sqlite3_free(zErrMsg);
+		return -1;
+	} 
+	else
+			return newId;
+		
+   return -1;
+}	
+
+bool	DBAccess::BuildConjunctivesTable()
+{	
+	int rc; // This line
+	string sql; // This line
+	sqlite3_stmt* stmt = 0;
+	
+	/* Create SQL statement */
+	sql = "CREATE TABLE if not exists \"conjunctives\" ( \"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, \"conjunctive\" TEXT NOT NULL,\"frequency\"	INTEGER NOT NULL DEFAULT 0);";
+	
+	rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
+
+	if( rc != SQLITE_OK ){
+		cout << "BuildVerbsTable error: CREATE" << endl;
+		return false;
+	}
+	else
+		return true;
+}
+
+bool DBAccess::ClearConjunctivesTable()
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+	sqlite3_stmt* stmt = 0;
+
+	sql = "DELETE FROM conjunctives";
+
+	rc = sqlite3_exec(db, sql.c_str(), 0, 0, &zErrMsg);
+
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "ClearConjunctivesTable error:" << endl;
+		return false;	
+	}
+	
+	sql = "VACUUM";
+
+	rc = sqlite3_exec(db, sql.c_str(), 0, 0, &zErrMsg);
+
+	if( rc != SQLITE_OK ){
+		cout << "ClearConjunctivesTable error:" << endl;
+		return false;
+	}
+	
+	return true;
+}
+
+std::string DBAccess::GetConjunctive(int id)
+{
+	return GetConjunctivesRecord(id,1);
+}
+
+int DBAccess::GetConjunctiveFrequency(int id)
+{
+	return stoi(GetConjunctivesRecord(id,2));
+}
+
+string DBAccess::GetConjunctivesRecord(int id, int column)
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+	string result;
+	sqlite3_stmt* stmt = 0;
+
+	sql = "SELECT * FROM conjunctives WHERE id = ?";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+	
+	sqlite3_bind_int(stmt,1,id);
+	
+	while ( sqlite3_step( stmt ) == SQLITE_ROW )
+	{
+		const unsigned char * tmp = sqlite3_column_text(stmt, column);
+		if(tmp == NULL)
+			result = "0";
+		else
+			result = std::string(reinterpret_cast<const char*>(tmp));
+    }
+	
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "AddConjunctiveToDB (IsAlreadyInTable) error:" << endl;
+		return "0";
+	}
+	
+	rc = sqlite3_finalize( stmt );
+ 
+	if( rc != SQLITE_OK ){
+		cout << "GetConjunctivesRecord error:" << endl;
+		return "0";
+	}
+	else 
+		return result;
+}
+
+bool DBAccess::GetConjunctivesInfoFromDB(std::string file_name)
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+	fstream file;
+   
+	file.open( file_name, std::ios::out);
+	if( !file.good() )
+	{
+		cout << "GetConjunctivesInfoFromDB error: Fail while open file." << endl;
+		return false;
+	}
+	
+	// Create SQL statement
+	sql = "SELECT id, conjunctive, frequency FROM conjunctives;";
+	
+	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToFile, &file, &zErrMsg);
+  
+	file.close();
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "GetConjunctivesInfoFromDB error:" << endl;
+		return false;
+	}
+	else 
+		return true;
+}
+
+bool DBAccess::GetConjunctiveInfoFromDB(int id, std::string file_name)
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+	fstream file;
+	sqlite3_stmt* stmt = 0;
+   
+	file.open( file_name, std::ios::out);
+	if( !file.good() )
+	{
+		cout << "GetConjunctiveInfoFromDB error: Fail while open file."<< endl;
+		return false;
+	}
+	
+	// Create SQL statement
+	sql = "SELECT id, conjunctive, frequency FROM conjunctives\
+			WHERE id = ?";
+			
+	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+	
+	sqlite3_bind_int(stmt,1,id);
+	
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "AddConjunctiveToDB (IsAlreadyInTable) error:" << endl;
+		return false;
+	}
+	
+	rc = sqlite3_finalize( stmt );
+  
+	file.close();
+	
+	if( rc != SQLITE_OK ){
+		cout << "GetConjunctiveInfoFromDB error:" << endl;
+		return false;
+	}
+	else 
+		return true;
+}
+
+std::ostream & DBAccess::GetConjunctivesInfoFromDB(std::ostream &out)
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+   
+	sql = "SELECT id, conjunctive, frequency FROM conjunctives;";
+		
+	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToStream, &out, &zErrMsg);
+	  
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "GetConjunctivesInfoFromDB error:" << endl;
+    }
+	return out;
+}
+
+std::ostream & DBAccess::GetConjunctiveInfoFromDB(int id, std::ostream &out)
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+   
+	sql = "SELECT id, conjunctive, frequency FROM conjunctives WHERE id = " + to_string(id) + ";";
+		
+	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToStream, &out, &zErrMsg);
+	  
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "GetConjunctiveInfoFromDB error:" << endl;
+	}
+	
+	return out;
+}
+
+std::vector<int> DBAccess::GetConjunctivesIndexes()
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+	sqlite3_stmt* stmt = 0;
+	vector<int> ids;
+
+	sql = "SELECT id FROM conjunctives";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+	
+	while ( sqlite3_step( stmt ) == SQLITE_ROW )
+		ids.push_back(sqlite3_column_int(stmt, 0));
+
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "GetConjunctivesIndexes error:" << endl;
+		return ids;
+	}
+	
+	rc = sqlite3_finalize( stmt );
+	
+	if( rc != SQLITE_OK )
+		cout << "GetConjunctivesIndexes error:" << endl;
+	else 
+		return ids;
+}	
+
+
+string DBAccess::RandomConjunctiveFromDB()
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+	int table_size;
+	sqlite3_stmt* stmt = 0;
+	string result;
+	
+	// Create SQL statement
+	sql = "SELECT COUNT(*) FROM conjunctives";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+	
+	while ( sqlite3_step( stmt ) == SQLITE_ROW )
+		table_size = sqlite3_column_int(stmt, 0);
+
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "RandomConjunctiveFromDB error:" << endl;
+		return "";
+	}
+	
+	rc = sqlite3_finalize( stmt );
+ 
+	if( rc != SQLITE_OK )
+	{
+		cout << "RandomConjunctiveFromDB : Get rable size" << endl;
+		return "";
+	}
+	
+	int x = RandID(table_size);
+	
+	// Create SQL statement
+	sql = "SELECT conjunctive FROM conjunctives WHERE id = ?";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+
+	sqlite3_bind_int(stmt,1,x);
+	
+	while ( sqlite3_step( stmt ) == SQLITE_ROW )
+	{
+		const unsigned char * tmp = sqlite3_column_text(stmt, 0);
+		if(tmp == NULL)
+			result = "";
+		else
+			result = std::string(reinterpret_cast<const char*>(tmp));
+    }
+
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "RandomConjunctiveFromDB error:" << endl;
+		return "";
+	}
+	
+	rc = sqlite3_finalize( stmt );
+ 
+	if( rc != SQLITE_OK )
+	{
+		cout << "RandomConjunctiveFromDB error: Get record by index." << endl;
+		return "";
+	}
+	
+	return result;
+}
+
+	// REMOVE TASKS:
+bool DBAccess::RemoveConjunctiveFromDB(int id)
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+	bool isInTable = false;
+	sqlite3_stmt* stmt = 0;
+
+	// Create SQL statement
+	sql = "SELECT * FROM conjunctives WHERE id = ?";
+	
+	rc = sqlite3_exec(db, sql.c_str(), IsAlreadyInTable,&isInTable, &zErrMsg);
+  
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "RemoveConjunctiveFromDB (IsAlreadyInTable) error:" << endl;
+		return false;
+    }
+	
+	// Create SQL statement
+	sql = "DELETE FROM conjunctives WHERE id = '" + to_string(id) + "';";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+	
+	sqlite3_bind_int(stmt,1,id);
+	
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "AddConjunctiveToDB (IsAlreadyInTable) error:"  << endl;
+		return false;
+	}
+	
+	rc = sqlite3_finalize( stmt );
+	  
+	if( rc != SQLITE_OK ){
+		cout << "RemoveConjunctiveFromDB error:" << endl;
+		return false;
+	}
+	else
+		return true;
+}
+
+	// SET VALUES:
+void DBAccess::SetConjunctive(int id, std::string conjunctive)
+{
+	SetConjunctiveRecord(id, 1, "conjunctive", conjunctive);
+}
+
+void DBAccess::SetConjunctiveFrequency(int id, int frequency)
+{
+	SetConjunctiveRecord(id, 1, "frequency", to_string(frequency));
+}
+
+void DBAccess::SetConjunctiveRecord(int id, int columnx, std::string column, std::string new_value)
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+	bool isInTable = false;
+	sqlite3_stmt* stmt = 0;
+
+	// Create SQL statement
+	sql = "SELECT * FROM conjunctives WHERE id = ?";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 );
+	
+	sqlite3_bind_int(stmt,1,id);
+	
+	while ( sqlite3_step( stmt ) == SQLITE_ROW )
+	{
+		const unsigned char *tmp = sqlite3_column_text( stmt, columnx );
+		string tmp2 = std::string(reinterpret_cast<const char*>(tmp));
+    }
+  
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "AddConjunctiveToDB (IsAlreadyInTable) error:" << endl;
+		
+	}
+	
+	rc = sqlite3_finalize( stmt );
+	
+	if( rc != SQLITE_OK ){
+		cout << "SetConjunctiveRecord (IsAlreadyInTable) error:" << endl;
+		return;
+	}
+	else if(isInTable){
+		cout << "SetConjunctiveRecord (IsAlreadyInTable) error: Recored already has given value" << endl;
+		return;
+	}
+	sql = "UPDATE conjunctives SET " + column + " = ?  WHERE id = ?";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 );
+	
+	sqlite3_bind_text(stmt,1,new_value.c_str(),-1,0);
+	sqlite3_bind_int(stmt,2,id);
+  
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+  
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "AddConjunctiveToDB (IsAlreadyInTable) error:" << endl;
+		return;
+	}
+	
+	rc = sqlite3_finalize( stmt );
+	
+	if( rc != SQLITE_OK )
+		cout << "SetConjunctiveRecord error:" << endl;
+}
+
+
 // USED IN OTHER FUNCTION:
 int DBAccess::IsAlreadyInTable(void* isInTable, int argc, char **argv, char **azColName)
 {	
@@ -1548,4 +2427,44 @@ int DBAccess::GetRecordFromDB(void *record, int argc, char **argv, char **azColN
 DBAccess::~DBAccess()
 {
 	sqlite3_close(db);
+}
+
+double DBAccess::pierwiastek(double a, double n)
+{
+//poczatkowe przyblizenie
+double result = a;
+//x^n-1
+double tmp = pow(result,(1/n));
+//dokladnosc obliczen
+double e = 0.0000000001;
+ 
+//dopoki wynik jest mniej dokladny niz zadana wartosc
+while (abs(a - tmp * result)>= e)
+{
+//oblicz nowe przyblizenie
+result = 1/n*((n-1)*result + (a/tmp));
+//x^n-1
+tmp = pow(result, n-1);
+}
+ 
+return result;
+}
+
+int DBAccess::RandID(int table_size)
+{
+	int x;
+	float y;
+	std::random_device rd;
+    std::default_random_engine e2(rd()) ;
+    std::uniform_real_distribution<> dist(0, 1);
+	
+	y = dist(e2);
+	cout << "ts = " << table_size << endl;
+	cout << "y = " << y << endl;
+	cout << "ts^(1/6) = " << pow((double)y,((float)1.0)/(float(7.0))) << endl;
+	
+	x = (int) table_size*(pow((double)y,((float)1.0)/(float(7.0))) );
+	cout << "x = " << x << endl;
+	
+	return x;
 }
