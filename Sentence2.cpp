@@ -74,9 +74,9 @@ std::string Sentence2::createSentence()
 	
 	if(Sentence2::negationSecond && resultSentenceSecondPart.length() == 0)
 		resultSentenceSecondPart = Sentence2::subjectSecond + " doesn't " + Sentence2::actionSecond + " " + Sentence2::attributiveSecond + ".";
-	else if(!Sentence2::negationSecond && resultSentenceFirstPart.length() == 0)
+	else if(!Sentence2::negationSecond && resultSentenceSecondPart.length() == 0)
 		resultSentenceSecondPart = Sentence2::subjectSecond + "s " + Sentence2::actionSecond + " " + Sentence2::attributiveSecond + ".";
-	
+
 	return resultSentenceFirstPart + resultSentenceSecondPart;
 }
 
