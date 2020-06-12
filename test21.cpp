@@ -3,27 +3,32 @@ using namespace std;
 
 void test21::test()
 {
-	/*initializeMutex();
+	initializeMutex();
 
 	pid_t process_id_1;
 	
 	process_id_1 = fork(); // fork
 	
-	if(process_id_1 == 0)
+	pid_t process_id_2;
+	
+	process_id_2 = fork();
+	
+	if(process_id_1 == 0 && process_id_2 == 0)
 	{
 		test21::consumer(); // consumer
-
 	}
 		
-	else if(process_id_1 > 0)
+	else if(process_id_1 > 0 && process_id_2 == 0)
 	{
+		
+
 		test21::producer(); // producer
 	}
 	
 	else if(process_id_1 < 0)
 		std::cout << "error" << std::endl;
 
-	*/
+	
 	CensorshipProgram cp;
 	
 	cp.generateForbidens(10);
@@ -44,9 +49,9 @@ void test21::test()
 		
 		std::cout << std::endl << "I am consumer" << std::endl;
 	
-		//sem_wait(test21::mutex); // We eneter the section
+		sem_wait(test21::mutex); // We eneter the section
 		
-		//cp.loadMessage("messages_test.txt");
+		cp.loadMessage("messages_test.txt");
 		cp.loadMessage();
 		
 		sem_post(test21::mutex); // We leave the section
@@ -55,7 +60,7 @@ void test21::test()
 		
 		cp.censureMessage();
 		cout << "censored:" << endl;
-		//cp.printCensored();
+		cp.printCensored();
 	}
 }
 
@@ -102,12 +107,12 @@ void test21::producer()
 		
 		cout << messenger << endl;
 		
-		//sem_wait(test21::mutex); // We eneter the section
+		sem_wait(test21::mutex); // We eneter the section
 		
-		//messenger.sendMessage("messages_test.txt");
+		messenger.sendMessage("messages_test.txt");
 		messenger.sendMessage();
 		
-		//sem_post(test21::mutex); // We leave the section
+		sem_post(test21::mutex); // We leave the section
 	}
 }
 
