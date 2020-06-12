@@ -35,6 +35,7 @@ private:
 		void initializeMutex();
 		bool archiveTests();
 		bool synchroTests();
+		bool DBAATests();
 };
 
 struct exceptionData

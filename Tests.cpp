@@ -124,6 +124,7 @@ bool Tests::DBATests()
 	return true;
 }
 
+
 bool Tests::SentencesTests()
 {
 	DBAccess  dba("sentenceGenerator.db");
