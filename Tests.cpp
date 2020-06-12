@@ -8,6 +8,7 @@ bool Tests::testAll()
 	{
 		DBATests();
 		SentencesTests();
+		CensorshipTests();
 	}
 	catch(exceptionData exc)
 	{
@@ -133,6 +134,15 @@ bool Tests::SentencesTests()
 	});
 	
 	cout << sent1.createSentence() << endl;
+}
+
+bool Tests::CensorshipTests()
+{
+	CensorshipProgram cp;
+	
+	cp.generateForbidens(10);
+	
+	cp.printForbidens();
 }
 
 ostream & operator<< (ostream &out, const exceptionData &exc)

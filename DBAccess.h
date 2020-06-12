@@ -8,7 +8,11 @@
 #include <fstream>
 #include <vector>
 #include <math.h>
-
+#include <stdio.h>
+#include <bits/stdc++.h>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
+#include <random>
 /*
 	Class to get access to database
 */

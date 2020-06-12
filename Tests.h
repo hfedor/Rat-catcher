@@ -4,6 +4,7 @@
 #include "DBAccess.h"
 #include "Sentence1.h"
 #include "SentenceGenerator.h"
+#include "CensorshipProgram.h"
 
 #include <iostream>
 
@@ -13,6 +14,7 @@ class Tests
         bool testAll();
 		bool DBATests();
 		bool SentencesTests();
+		bool CensorshipTests();
 };
 
 struct exceptionData

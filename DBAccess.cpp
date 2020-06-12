@@ -1,13 +1,5 @@
 #include "DBAccess.h"
 
-#include <stdio.h>
-#include <bits/stdc++.h>
-
-
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
-#include <random>
-
 using namespace std;
 
 // NODES:
@@ -137,7 +129,7 @@ bool	DBAccess::BuildNounsTable()
 	rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
 
 	if( rc != SQLITE_OK ){
-		cout << "BuildVerbsTable error: CREATE" << endl;
+		cout << "BuildNounsTable error: CREATE" << endl;
 		return false;
 	}
 	else
