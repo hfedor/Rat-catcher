@@ -3,17 +3,24 @@
 using namespace std;
 
 std::string return_current_time_and_date()
-	{
-		auto now = std::chrono::system_clock::now();
-		auto in_time_t = std::chrono::system_clock::to_time_t(now);
-		
-		std::stringstream ss;
-		ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
-		return ss.str();
-	}
+{
+	auto now = std::chrono::system_clock::now();
+	auto in_time_t = std::chrono::system_clock::to_time_t(now);
+	
+	std::stringstream ss;
+	ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
+	return ss.str();
+}
 
 Messenger::Messenger(string messanger_name)
 {
+	name = messanger_name;
+	generateMessage();
+}
+
+Messenger::Messenger(std::string messanger_name, int synchronize)
+{
+	synchornize_mode = synchronize;
 	name = messanger_name;
 	generateMessage();
 }
@@ -76,15 +83,24 @@ void Messenger::generateMessage()
 
 bool Messenger::sendMessage()
 {
-	std::fstream file;
-	file.open( file_name, std::ios::out  | ios::app);
-	if( file.good() != true )
+	if(synchornize_mode == 1)
 	{
-		cout << "Cant't open the file \"" << file_name  << "\"!" << std::endl;
-		return false;
+		DBMessageAccess dbma("messages.db");
+		
+		dbma.AddMessageToDB(message, return_current_time_and_date());
 	}
-	
-	file << *this << endl;
+	else
+	{
+		std::fstream file;
+		file.open( file_name, std::ios::out  | ios::app);
+		if( file.good() != true )
+		{
+			cout << "Cant't open the file \"" << file_name  << "\"!" << std::endl;
+			return false;
+		}
+		
+		file << *this << endl;
+	}
 	
 	return true;
 }
