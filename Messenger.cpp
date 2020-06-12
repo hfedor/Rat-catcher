@@ -92,9 +92,9 @@ bool Messenger::sendMessage()
 	
 	dbma.AddMessageToDB(message, sended);	
 	
-	DBAchivesAccess dbaa("achives.db");
+	//DBAchivesAccess dbaa("achives.db");
 	
-	dbaa.AddMessageToDB(message,sended,"","");
+	//dbaa.AddMessageToDB(message,sended,"","");
 	
 	message = "";
 	
