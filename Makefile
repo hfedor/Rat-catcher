@@ -1,7 +1,7 @@
 CXX = g++
 
-all: DBAccess.o Sentence.o Sentence1.o SentenceGenerator.o CensorshipProgram.o Tests.o main.o
-	$(CXX) DBAccess.o Sentence.o Sentence1.o SentenceGenerator.o CensorshipProgram.o Tests.o main.o -l sqlite3 -o test
+all: DBAccess.o Sentence.o Sentence1.o Sentence2.o Sentence3.o SentenceGenerator.o Messenger.o CensorshipProgram.o Tests.o main.o
+	$(CXX) DBAccess.o Sentence.o Sentence1.o Sentence2.o Sentence3.o SentenceGenerator.o Messenger.o CensorshipProgram.o Tests.o main.o -l sqlite3 -o test
 
 DBAccess.o: DBAccess.cpp DBAccess.h
 	$(CXX) DBAccess.cpp -c -o DBAccess.o
@@ -20,6 +20,9 @@ Sentence3.o: Sentence3.cpp Sentence3.h Sentence.h
 	
 CensorshipProgram.o: CensorshipProgram.cpp CensorshipProgram.h DBAccess.h
 	$(CXX) CensorshipProgram.cpp -c -o CensorshipProgram.o
+
+Messenger.o: Messenger.cpp Messenger.h DBAccess.h Sentence1.h Sentence2.h Sentence3.h
+	$(CXX) Messenger.cpp -c -o Messenger.o
 	
 processes.o: processes.cpp 
 	$(CXX) processes.cpp -c -o processes.o
@@ -27,7 +30,7 @@ processes.o: processes.cpp
 SentenceGenerator.o: SentenceGenerator.cpp SentenceGenerator.h Sentence1.h
 	$(CXX) SentenceGenerator.cpp -c -o SentenceGenerator.o
 
-Tests.o: Tests.cpp Tests.h DBAccess.h Sentence.h Sentence1.h SentenceGenerator.h CensorshipProgram.h
+Tests.o: Tests.cpp Tests.h DBAccess.h Sentence.h Sentence1.h Sentence2.h Sentence3.h SentenceGenerator.h  Messenger.h CensorshipProgram.h
 	$(CXX) Tests.cpp -c -l sqlite3 -o Tests.o
 	
 main.o: main.cpp SentenceGenerator.h Tests.h

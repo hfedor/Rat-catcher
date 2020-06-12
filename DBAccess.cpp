@@ -2421,27 +2421,6 @@ DBAccess::~DBAccess()
 	sqlite3_close(db);
 }
 
-double DBAccess::pierwiastek(double a, double n)
-{
-//poczatkowe przyblizenie
-double result = a;
-//x^n-1
-double tmp = pow(result,(1/n));
-//dokladnosc obliczen
-double e = 0.0000000001;
- 
-//dopoki wynik jest mniej dokladny niz zadana wartosc
-while (abs(a - tmp * result)>= e)
-{
-//oblicz nowe przyblizenie
-result = 1/n*((n-1)*result + (a/tmp));
-//x^n-1
-tmp = pow(result, n-1);
-}
- 
-return result;
-}
-
 int DBAccess::RandID(int table_size)
 {
 	int x;
@@ -2451,12 +2430,12 @@ int DBAccess::RandID(int table_size)
     std::uniform_real_distribution<> dist(0, 1);
 	
 	y = dist(e2);
-	cout << "ts = " << table_size << endl;
-	cout << "y = " << y << endl;
-	cout << "ts^(1/6) = " << pow((double)y,((float)1.0)/(float(7.0))) << endl;
+	//cout << "ts = " << table_size << endl;
+	//cout << "y = " << y << endl;
+	//cout << "ts^(1/6) = " << pow((double)y,((float)1.0)/(float(7.0))) << endl;
 	
 	x = (int) table_size*(pow((double)y,((float)1.0)/(float(7.0))) );
-	cout << "x = " << x << endl;
+	//cout << "x = " << x << endl;
 	
 	return x;
 }

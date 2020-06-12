@@ -28,8 +28,6 @@ std::string CensorshipProgram::addForbiden(int words_numb)
 		result += " ";
 	}
 	
-	cout << result << endl;
-	
 	return result;	
 }
 

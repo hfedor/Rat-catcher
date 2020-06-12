@@ -27,7 +27,7 @@ std::string Sentence2::sentence2Generator()
 	if(randomizerOfFirstNegation % 2 == 0) // There is negation in the sentence 
 		Sentence2::negation = true;
 	
-	if(randomizerOfFirstNegation % 3 == 0) // There is negation in the second part of the sentence
+	if(randomizerOfSecondNegation % 3 == 0) // There is negation in the second part of the sentence
 		Sentence2::negationSecond = true;
 	
 	return createSentence();

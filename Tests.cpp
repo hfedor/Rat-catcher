@@ -9,6 +9,7 @@ bool Tests::testAll()
 		DBATests();
 		SentencesTests();
 		CensorshipTests();
+		MessengerTests();
 	}
 	catch(exceptionData exc)
 	{
@@ -133,7 +134,26 @@ bool Tests::SentencesTests()
 		dba.RandomAdjectiveFromDB()
 	});
 	
-	cout << sent1.createSentence() << endl;
+	cout << "sent1: " << sent1.createSentence() << endl;
+	
+	Sentence2 sent2({
+		dba.RandomNounFromDB(),
+		dba.RandomVerbFromDB(),
+		dba.RandomAdjectiveFromDB(),
+		dba.RandomNounFromDB(),
+		dba.RandomVerbFromDB(),
+		dba.RandomAdjectiveFromDB()
+	});
+	
+	cout << "sent2: " << sent2.createSentence() << endl;
+	
+	Sentence3 sent3({
+		dba.RandomNounFromDB(),
+		dba.RandomVerbFromDB(),
+		dba.RandomAdjectiveFromDB()
+	});
+	
+	cout << "sent3: " << sent3.createSentence() << endl;
 }
 
 bool Tests::CensorshipTests()
@@ -143,6 +163,16 @@ bool Tests::CensorshipTests()
 	cp.generateForbidens(10);
 	
 	cp.printForbidens();
+}
+
+
+bool Tests::MessengerTests()
+{
+	Messenger messenger;
+	
+	messenger.generateMessage();
+	
+	cout << messenger << endl;
 }
 
 ostream & operator<< (ostream &out, const exceptionData &exc)

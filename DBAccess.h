@@ -30,7 +30,6 @@ class DBAccess
 		static int PrintFromDBToStream(void *out, int argc, char **argv, char **azColName);
 		static int PrintFromDBToFile(void *file, int argc, char **argv, char **azColName);
 		int RandID(int table_size);
-		double pierwiastek(double a, double n);
 	public:
 		// FUNCTIONS TO CONNECT WITH DATEBASE:
 		

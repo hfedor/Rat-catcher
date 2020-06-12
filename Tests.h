@@ -3,8 +3,11 @@
 	
 #include "DBAccess.h"
 #include "Sentence1.h"
+#include "Sentence2.h"
+#include "Sentence3.h"
 #include "SentenceGenerator.h"
 #include "CensorshipProgram.h"
+#include "Messenger.h"
 
 #include <iostream>
 
@@ -15,6 +18,7 @@ class Tests
 		bool DBATests();
 		bool SentencesTests();
 		bool CensorshipTests();
+		bool MessengerTests();
 };
 
 struct exceptionData
