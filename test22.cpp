@@ -8,7 +8,7 @@ void test22::test()
 
 	pid_t process_id_1;
 	
-	for(int i = 0; i < 5; i++)
+	for(int i = 0; i < 100; i++)
 	{
 		process_id_1 = fork(); // fork
 		
@@ -53,7 +53,7 @@ void test22::consumer()
 	
 	std::cout << std::endl << "I am consumer" << std::endl;
 	
-	//sem_wait(test22::mutex); // We enter the section
+//sem_wait(test22::mutex); // We enter the section
 	
 	cp.loadMessage();//"messages_test.txt");
 	

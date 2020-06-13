@@ -25,42 +25,6 @@ int  DBMessageAccess::AddMessageToDB(string message, string sended)
 	string sql;
 	bool isInTable = false;
 	sqlite3_stmt* stmt = 0;
-
-	// Create SQL statement
-	sql = "SELECT * FROM messages WHERE message = ? AND sended = ?";
-	
-	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
-
-	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
-	
-	sqlite3_bind_text(stmt,1,message.c_str(),-1,0);
-	sqlite3_bind_text(stmt,2,sended.c_str(),-1,0);
-
-	if( sqlite3_step( stmt ) == SQLITE_ROW ) 
-		isInTable = true;
-
-	sqlite3_step( stmt );
-	sqlite3_clear_bindings( stmt );
-	sqlite3_reset( stmt );
-	
-	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
-	
-	if( rc != SQLITE_OK )
-	{
-		sqlite3_free(zErrMsg);
-		cout << "AddMessageToDB (IsAlreadyInTable) error:" << endl;
-		return -1;
-	}
-	
-	rc = sqlite3_finalize( stmt );
- 
-	if( rc != SQLITE_OK )
-		cout << "AddMessageToDB (IsAlreadyInTable) error:" << endl;
-	else if(isInTable)
-	{
-		cout << "AddMessageToDB (IsAlreadyInTable) error: Recored already in table." << endl;
-		return -1;
-	}
 	
 	// Create SQL statement
 	sql = "INSERT INTO messages (message, sended) VALUES (?,?)";
@@ -71,9 +35,8 @@ int  DBMessageAccess::AddMessageToDB(string message, string sended)
 	
 	sqlite3_bind_text(stmt,1,message.c_str(),-1,0);
 	sqlite3_bind_text(stmt,2,sended.c_str(),-1,0);
-
+	
 	sqlite3_step( stmt );
-	sqlite3_clear_bindings( stmt );
 	sqlite3_reset( stmt );
 	
 	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
@@ -112,20 +75,36 @@ int  DBMessageAccess::AddMessageToDB(string message, string sended)
 
 bool	DBMessageAccess::BuildMessagesTable()
 {	
+	char *zErrMsg = 0;
 	int rc; // This line
 	string sql; // This line
 	sqlite3_stmt* stmt = 0;
 	
 	/* Create SQL statement */
-	sql = "CREATE TABLE if not exists  \"messages\" (\"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,\"message\"	TEXT NOT NULL,\"sended\"	INTEGER NOT NULL);";
+	sql = "CREATE TABLE if not exists \"messages\" ( \"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, \"message\"	TEXT, \"sended\"	TEXT)";
+		
+	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
 	
-	rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
-
-	if( rc != SQLITE_OK ){
-		cout << "BuildMessagesTable error: CREATE" << endl;
+	sqlite3_step( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "BuildMessagesTable error:" << endl;
 		return false;
 	}
-	else
+	
+	rc = sqlite3_finalize( stmt );
+ 
+	if( rc != SQLITE_OK ){
+		cout << "BuildMessagesTable error:" << endl;
+		return false;
+	}
+	else 
 		return true;
 }
 
@@ -181,7 +160,6 @@ int DBMessageAccess::FindFirst()
     }
 	
 	sqlite3_step( stmt );
-	sqlite3_clear_bindings( stmt );
 	sqlite3_reset( stmt );
 	
 	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.

@@ -7,7 +7,7 @@ void test21::test()
 
 	pid_t process_id_1;
 	
-	for(int i = 0; i < 10; i++)
+	for(int i = 0; i < 1000; i++)
 	{
 		process_id_1 = fork(); // fork
 
@@ -46,13 +46,15 @@ void test21::consumer()
 	cp.loadMessage("messages_test.txt");
 	//cp.loadMessage();
 	
-	sem_post(test21::mutex); // We leave the section
 	
 	cp.printMessage();
 	
 	cp.censureMessage();
 	cout << "censored:" << endl;
 	cp.printCensored();
+	
+	sem_post(test21::mutex); // We leave the section
+	
 }
 void test21::producer()
 {
@@ -64,10 +66,10 @@ void test21::producer()
 	
 	cout << messenger << endl;
 	
-	sem_wait(test21::mutex); // We eneter the section
-	
 	messenger.sendMessage("messages_test.txt");
 	//messenger.sendMessage();
+	
+	sem_wait(test21::mutex); // We eneter the section
 	
 	sem_post(test21::mutex); // We leave the section
 }

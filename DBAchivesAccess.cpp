@@ -77,6 +77,7 @@ int  DBAchivesAccess::AddMessageToDB(string message, string sended, long sended_
 
 bool	DBAchivesAccess::BuildAchivesTable()
 {	
+	char *zErrMsg = 0;
 	int rc; // This line
 	string sql; // This line
 	sqlite3_stmt* stmt = 0;
@@ -84,13 +85,30 @@ bool	DBAchivesAccess::BuildAchivesTable()
 	/* Create SQL statement */
 	sql = "CREATE TABLE if not exists  \"achives\" ( \"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, \"message\"	TEXT NOT NULL, \"sended\"	TEXT NOT NULL, \"censored\"	TEXT,\"loaded\"	TEXT,\"sended_numb\"	REAL NOT NULL,\"loaded_numb\"	REAL,\"duration\"	REAL);";
 	
-	rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
+	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
 
-	if( rc != SQLITE_OK ){
-		cout << "BuildAchivesTable error: CREATE" << endl;
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+	
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "BuildMessagesTable error:" << endl;
 		return false;
 	}
-	else
+	
+	rc = sqlite3_finalize( stmt );
+ 
+	if( rc != SQLITE_OK ){
+		cout << "BuildMessagesTable error:" << endl;
+		return false;
+	}
+	else 
 		return true;
 }
 
