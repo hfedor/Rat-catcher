@@ -3,6 +3,7 @@ using namespace std;
 
 void test22::test()
 {
+	
 	initializeMutex();
 
 	pid_t process_id_1;
@@ -36,9 +37,9 @@ void test22::consumer()
 {
 	int pid = getpid();
 	struct sched_param parametr = { .sched_priority = sched_get_priority_max(SCHED_FIFO) }; // We will use it to change our policy to FIFO 
-	int result = sched_setscheduler(0, SCHED_FIFO, &parametr); // FIFO Policy
+	//int result = sched_setscheduler(0, SCHED_FIFO, &parametr); // FIFO Policy
 	//int result = sched_setscheduler(0, SCHED_BATCH, 0); // BATCH Policy
-	//int result =	 sched_setscheduler(0, SCHED_OTHER, 0); // BATCH Policy
+	int result =	 sched_setscheduler(0, SCHED_OTHER, 0); // BATCH Policy
 	
 	
 	if(result < 0)
@@ -52,11 +53,11 @@ void test22::consumer()
 	
 	std::cout << std::endl << "I am consumer" << std::endl;
 	
-	sem_wait(test22::mutex); // We enter the section
+	//sem_wait(test22::mutex); // We enter the section
 	
-	cp.loadMessage("messages_test.txt");
+	cp.loadMessage();//"messages_test.txt");
 	
-	sem_post(test22::mutex); // We leave the section
+	//sem_post(test22::mutex); // We leave the section
 	
 	//cp.printMessage();
 	
@@ -74,11 +75,11 @@ void test22::producer()
 	
 	//cout << messenger << endl;
 	
-	sem_wait(test22::mutex); // We eneter the section
+	//sem_wait(test22::mutex); // We eneter the section
 	
-	messenger.sendMessage("messages_test.txt");
+	messenger.sendMessage();//"messages_test.txt");
 	
-	sem_post(test22::mutex); // We leave the section
+	//sem_post(test22::mutex); // We leave the section
 }
 
 

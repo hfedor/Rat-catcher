@@ -10,14 +10,14 @@ int main()
 	//test21 tests;
 	//tests.test();
 	
-	//test22 tests2;
-	//tests2.test();
+	test22 tests2;
+	tests2.test();
 	
 	//test23 tests3;
 	//tests3.test();
 	
-	Tests t;
-	t.testAll();
+	//Tests t;
+	//t.testAll();
 	
 	return 1;
 }

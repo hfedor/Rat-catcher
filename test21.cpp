@@ -7,7 +7,7 @@ void test21::test()
 
 	pid_t process_id_1;
 	
-	for(int i = 0; i < 5; i++)
+	for(int i = 0; i < 10; i++)
 	{
 		process_id_1 = fork(); // fork
 
