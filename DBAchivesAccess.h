@@ -32,7 +32,7 @@ class DBAchivesAccess
 		int RandID(int table_size);
 	public:
 		DBAchivesAccess(std::string db_file_name);
-		int AddMessageToDB(std::string message, std::string sented, std::string cenzored, std::string loaded); // add noun with gien datas to database
+		int AddMessageToDB(std::string message, std::string sented, long sended_numb); // add noun with gien datas to database
 		bool BuildAchivesTable(); // build  noun table
 		bool ClearAchivesTable(); // remove all records from tasks table
 		int FindMessage(std::string message, std::string sended);
@@ -40,6 +40,9 @@ class DBAchivesAccess
 		std::string GetSended(int message_id); // get path to file of noun with given ID
 		std::string GetCensored(int message_id); // get path to file of noun with given ID
 		std::string GetLoaded(int message_id); // get path to file of noun with given ID
+		long GetSendedNumb(int message_id); // get path to file of noun with given ID
+		long GetLoadedNumb(int message_id); // get path to file of noun with given ID
+		long GetDuration(int message_id); // get path to file of noun with given ID
 		std::string GetRecord(int message_id, int column);  // get record from given column from node with given ID
 		bool GetAchivesInfoFromDB(std::string file_name); // get Inforamtions about all noun and put it to file with given name
 		bool GetAchiveInfoFromDB(int message_id, std::string file_name); // get Inforamtions about noun with given ID and put it to file with given name
@@ -52,6 +55,9 @@ class DBAchivesAccess
 		void SetSended(int message_id, std::string sended); // set new path to file of noun copy with gicen ID
 		void SetCensored(int message_id, std::string censored); // set new path to file of noun copy with gicen ID
 		void SetLoaded(int message_id, std::string loaded); // set new path to file of noun copy with gicen ID
+		void SetSendedNumb(int message_id, long sended_numb); // set new path to file of noun copy with gicen ID
+		void SetLoadedNumb(int message_id, long loaded_numb); // set new path to file of noun copy with gicen ID
+		void SetDuration(int message_id, long duration); // set new path to file of noun copy with gicen ID
 		void SetRecord(int message_id, int columnx, std::string column, std::string new_value); // set new given value of given column in noun with gicen ID
 		
 		~DBAchivesAccess();

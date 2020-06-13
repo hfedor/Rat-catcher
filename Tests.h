@@ -36,6 +36,7 @@ private:
 		void initializeMutex();
 		bool archiveTests();
 		bool synchroTests();
+		bool synchroDBTests();
 		bool DBAATests();
 };
 

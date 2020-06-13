@@ -6,24 +6,26 @@ void test23::test()
 	initializeMutex();
 
 	pid_t process_id_1;
-	
-	process_id_1 = fork(); // fork
-	
-	if(process_id_1 == 0)
-	{
-		test23::consumer(); // consumer
 
-	}
+	for(int i = 0; i < 5; i++)
+	{
+		process_id_1 = fork(); // fork
 		
-	else if(process_id_1 > 0)
-	{
-		test23::producer(); // producer
+		if(process_id_1 == 0)
+		{
+			test23::consumer(); // consumer
+
+		}
+			
+		else if(process_id_1 > 0)
+		{
+			test23::producer(); // producer
+		}
+		
+		else if(process_id_1 < 0)
+			std::cout << "error" << std::endl;
+
 	}
-	
-	else if(process_id_1 < 0)
-		std::cout << "error" << std::endl;
-
-
 }
 
 void test23::initializeMutex()
@@ -47,24 +49,21 @@ void test23::consumer()
 	
 	cp.generateForbidens(10);
 	
-	cp.printForbidens();
+	//cp.printForbidens();
 	
-	while(1)
-	{
-		std::cout << std::endl << "I am consumer" << std::endl;
+	std::cout << std::endl << "I am consumer" << std::endl;
 	
-		sem_wait(test23::mutex); // We enter the section
+	sem_wait(test23::mutex); // We enter the section
 		
-		cp.loadMessage("messages_test.txt");
+	cp.loadMessage("messages_test.txt");
 		
-		sem_post(test23::mutex); // We leave the section
+	sem_post(test23::mutex); // We leave the section
 		
-		//cp.printMessage();
+	cp.printMessage();
 		
-		cp.censureMessage();
+	cp.censureMessage();
 		//cout << "censored:" << endl;
 		//cp.printCensored();
-	}
 }
 void test23::producer()
 {
@@ -79,20 +78,17 @@ void test23::producer()
 	if(result < 0)
 		std::cout<<"error while changing priority" << std::endl;
 	
-	while(1)
-	{
-		std::cout << std::endl << "I am producer" << std::endl;
+	std::cout << std::endl << "I am producer" << std::endl;
 	
-		messenger.generateMessage();
+	messenger.generateMessage();
 		
-		//cout << messenger << endl;
-		
-		sem_wait(test23::mutex); // We eneter the section
-		
-		messenger.sendMessage("messages_test.txt");
-		
-		sem_post(test23::mutex); // We leave the section
-	}
+	//cout << messenger << endl;
+	
+	sem_wait(test23::mutex); // We eneter the section
+	
+	messenger.sendMessage("messages_test.txt");
+	
+	sem_post(test23::mutex); // We leave the section
 }
 
 

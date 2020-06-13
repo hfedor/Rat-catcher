@@ -26,6 +26,7 @@ private:
 	int char_limit = 500;
 	std::string file_name = "messeges.txt";	// name of text file where messenger sends messages
 	std::string sended;
+	long return_current_time_numb();
 public:
 	Messenger(std::string messanger_name);
 	void generateMessage();

@@ -38,6 +38,7 @@ class DBMessageAccess
 		int AddMessageToDB(std::string noun, std::string sented); // add noun with gien datas to database
 		bool BuildMessagesTable(); // build  noun table
 		bool ClearMessagesTable(); // remove all records from tasks table
+		int FindFirst();
 		std::string GetMessage(int noun_id); // get path to file of noun with given ID
 		std::string GetMessageSended(int noun_id); // get path to file of noun with given ID
 		std::string GetMessagesRecord(int noun_id, int column);  // get record from given column from node with given ID

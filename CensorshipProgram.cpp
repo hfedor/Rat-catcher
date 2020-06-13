@@ -33,6 +33,7 @@ std::string CensorshipProgram::addForbiden(int words_numb)
 
 std::string CensorshipProgram::censureMessage()
 {
+	censored = "";
 	string s = "";
 	for(int i = 0 ; i < message.length(); i ++)
 	{
@@ -49,9 +50,9 @@ std::string CensorshipProgram::censureMessage()
 	
 	DBAchivesAccess dbaa("achives.db");
 	
-	//dbaa.FindMessage(message,sended);
-	
-	message = "";
+	if(ach_id < 1)
+		return censored;
+	dbaa.SetCensored(ach_id, censored);
 	
 	return censored;
 }
@@ -68,11 +69,14 @@ bool  CensorshipProgram::checkWord(string word)
 std::string CensorshipProgram::loadMessage()
 {
 	message = "";
+	censored = "";
 	DBMessageAccess dbma("messages.db");
 	
-	vector<int> mess_id = dbma.GetMessagesIndexes();
+	int  id = dbma.FindFirst();
+	cout << id << endl;
 	
-	int  id = mess_id.front();
+	if(id < 1)
+		return "";
 	
 	message = dbma.GetMessage(id);
 	sended = dbma.GetMessageSended(id);
@@ -80,13 +84,18 @@ std::string CensorshipProgram::loadMessage()
 	dbma.RemoveMessageFromDB(id);
 	
 	loaded	= return_current_time_and_date();
+	long loaded_numb =  return_current_time_numb();
 	
 	DBAchivesAccess dbaa("achives.db");
 	
-	id = dbaa.FindMessage(message, sended);
+	ach_id = dbaa.FindMessage(message, sended);
+	cout << ach_id << endl;
 	
-	dbaa.SetCensored(id, censored);
-	dbaa.SetLoaded(id, loaded);
+	if(ach_id < 1)
+		return message;
+	dbaa.SetLoaded(ach_id, loaded);
+	dbaa.SetLoadedNumb(ach_id, loaded_numb);
+	dbaa.SetDuration(ach_id,(long) loaded_numb - dbaa.GetSendedNumb(ach_id));
 	
 	return message;
 }
@@ -94,6 +103,7 @@ std::string CensorshipProgram::loadMessage()
 std::string CensorshipProgram::loadMessage(std::string file_name)
 {
 	message = "";
+	censored = "";
 	std::fstream file;
 	string line = "";
 	string upload;
@@ -229,4 +239,33 @@ void CensorshipProgram::printMessage()
 void CensorshipProgram::printCensored()
 {
 	cout << censored << endl;
+}
+
+std::string CensorshipProgram::return_current_time_and_date()
+{
+	auto now = std::chrono::system_clock::now();
+	auto in_time_t = std::chrono::system_clock::to_time_t(now);
+	
+	std::stringstream ss;
+	ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
+	return ss.str();
+}
+
+long CensorshipProgram::return_current_time_numb()
+{
+	using namespace std::chrono;
+    auto now = system_clock::now();
+    auto now_ms = time_point_cast<milliseconds>(now);
+
+    auto value = now_ms.time_since_epoch();
+    long duration = value.count();
+
+    milliseconds dur(duration);
+
+    time_point<system_clock> dt(dur);
+
+    if (dt != now_ms)
+		return 0;
+    else
+		return duration;
 }

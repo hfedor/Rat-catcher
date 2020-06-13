@@ -117,7 +117,7 @@ bool	DBMessageAccess::BuildMessagesTable()
 	sqlite3_stmt* stmt = 0;
 	
 	/* Create SQL statement */
-	sql = "CREATE TABLE if not exists  \"messages\" ( \"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, \"message\"	TEXT NOT NULL, \"sended\"	INTEGER NOT NULL DEFAULT 0);";
+	sql = "CREATE TABLE if not exists  \"messages\" (\"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,\"message\"	TEXT NOT NULL,\"sended\"	INTEGER NOT NULL);";
 	
 	rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
 
@@ -159,6 +159,50 @@ bool DBMessageAccess::ClearMessagesTable()
 	return true;
 }
 
+int DBMessageAccess::FindFirst()
+{
+	char *zErrMsg = 0;
+	int rc;
+	string sql;
+	int result;
+	sqlite3_stmt* stmt = 0;
+
+	sql = "SELECT id FROM messages LIMIT 1";
+	
+	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
+	
+	while ( sqlite3_step( stmt ) == SQLITE_ROW )
+	{
+		result = sqlite3_column_int(stmt, 0);
+		if(result == 0)
+			result = -1;
+    }
+	
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
+	
+	if( rc != SQLITE_OK )
+	{
+		sqlite3_free(zErrMsg);
+		cout << "AddMessageToDB (IsAlreadyInTable) error:" << endl;
+		return -1;
+	}
+	
+	rc = sqlite3_finalize( stmt );
+ 
+	if( rc != SQLITE_OK ){
+		cout << "GetMessagesRecord error:" << endl;
+		return -1;
+	}
+	else 
+		return result;
+}
+
 std::string DBMessageAccess::GetMessage(int id)
 {
 	return GetMessagesRecord(id,1);
@@ -188,6 +232,7 @@ string DBMessageAccess::GetMessagesRecord(int id, int column)
 	while ( sqlite3_step( stmt ) == SQLITE_ROW )
 	{
 		const unsigned char * tmp = sqlite3_column_text(stmt, column);
+		cout << tmp << endl;
 		if(tmp == NULL)
 			result = "0";
 		else
@@ -467,19 +512,18 @@ bool DBMessageAccess::RemoveMessageFromDB(int id)
 	sqlite3_stmt* stmt = 0;
 
 	// Create SQL statement
-	sql = "SELECT * FROM messages WHERE id = ?";
+	sql = "SELECT * FROM messages WHERE id = " + to_string(id) + ";";
 	
 	rc = sqlite3_exec(db, sql.c_str(), IsAlreadyInTable,&isInTable, &zErrMsg);
   
 	if( rc != SQLITE_OK )
 	{
 		sqlite3_free(zErrMsg);
-		cout << "RemoveMessageFromDB (IsAlreadyInTable) error:" << endl;
 		return false;
     }
 	
 	// Create SQL statement
-	sql = "DELETE FROM messages WHERE id = '" + to_string(id) + "';";
+	sql = "DELETE FROM messages WHERE id = ? ";
 	
 	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
 
@@ -496,7 +540,7 @@ bool DBMessageAccess::RemoveMessageFromDB(int id)
 	if( rc != SQLITE_OK )
 	{
 		sqlite3_free(zErrMsg);
-		cout << "AddMessageToDB (IsAlreadyInTable) error:"  << endl;
+		cout << "RemoveMessageFromDB error:"  << endl;
 		return false;
 	}
 	

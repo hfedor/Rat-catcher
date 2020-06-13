@@ -13,6 +13,7 @@
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
 #include <random>
+#include <chrono>
 /*
 	Class to get access to database
 */
@@ -30,6 +31,7 @@ class DBAccess
 		static int PrintFromDBToStream(void *out, int argc, char **argv, char **azColName);
 		static int PrintFromDBToFile(void *file, int argc, char **argv, char **azColName);
 		int RandID(int table_size);
+
 	public:
 		// FUNCTIONS TO CONNECT WITH DATEBASE:
 		
@@ -106,5 +108,7 @@ class DBAccess
 		
 		~DBAccess();
 };
+
+std::string return_current_time_and_date();
 	
 #endif // PMDATEBASEACCESS_HPP

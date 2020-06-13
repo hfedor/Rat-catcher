@@ -21,6 +21,9 @@ private:
 	std::string sended = "";
 	std::string censored = "";
 	std::string loaded = "";
+	int ach_id = 0;
+	std::string return_current_time_and_date();
+	long return_current_time_numb();
 public:
 	CensorshipProgram();
 	CensorshipProgram(int forbiden_numb);
@@ -35,5 +38,3 @@ public:
 	void printMessage();
 	void printCensored();
 };
-
-std::string return_current_time_and_date();

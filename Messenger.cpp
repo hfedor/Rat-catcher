@@ -2,16 +2,6 @@
 
 using namespace std;
 
-std::string return_current_time_and_date()
-{
-	auto now = std::chrono::system_clock::now();
-	auto in_time_t = std::chrono::system_clock::to_time_t(now);
-	
-	std::stringstream ss;
-	ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d %X");
-	return ss.str();
-}
-
 std::string print_time_and_date()
 {
 	auto now = std::chrono::system_clock::now();
@@ -89,18 +79,16 @@ bool Messenger::sendMessage()
 	DBMessageAccess dbma("messages.db");
 		
 	sended = return_current_time_and_date();
+	long sended_numb = return_current_time_numb();
 	
 	dbma.AddMessageToDB(message, sended);	
 	
-	//DBAchivesAccess dbaa("achives.db");
+	DBAchivesAccess dbaa("achives.db");
 	
-	//dbaa.AddMessageToDB(message,sended,"","");
-	
-	message = "";
+	dbaa.AddMessageToDB(message,sended,sended_numb);
 	
 	return true;
 }
-
 
 bool Messenger::sendMessage(string file_name)
 {
@@ -113,13 +101,12 @@ bool Messenger::sendMessage(string file_name)
 	}
 	
 	sended	= return_current_time_and_date();
+	long sended_numb = return_current_time_numb();
 	file << *this << endl;
 	
 	DBAchivesAccess dbaa("achives.db");
 	
-	dbaa.AddMessageToDB(message,sended,"","");
-	
-	message = "";
+	dbaa.AddMessageToDB(message,sended,sended_numb);
 	
 	return true;
 }
@@ -136,8 +123,7 @@ std::string Messenger::	printMessage()
 	result += "</message>\n";
     return result;
 }
-	
-	
+
 ostream & operator<< ( ostream &out, Messenger &messenger)
 {
 	out << "<message>\n";
@@ -152,4 +138,24 @@ ostream & operator<< ( ostream &out, Messenger &messenger)
 	out << messenger.message << "\n";
 	out << "</message>" << endl;
     return out;
+}
+
+
+long Messenger::return_current_time_numb()
+{
+	using namespace std::chrono;
+    auto now = system_clock::now();
+    auto now_ms = time_point_cast<milliseconds>(now);
+
+    auto value = now_ms.time_since_epoch();
+    long duration = value.count();
+
+    milliseconds dur(duration);
+
+    time_point<system_clock> dt(dur);
+
+    if (dt != now_ms)
+		return 0;
+    else
+		return duration;
 }

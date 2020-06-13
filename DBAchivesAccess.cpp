@@ -18,7 +18,7 @@ DBAchivesAccess::DBAchivesAccess(string db_file_name)
 }
 
 // ADD MESSAGE:
-int  DBAchivesAccess::AddMessageToDB(string message, string sended, string censored, string loaded)
+int  DBAchivesAccess::AddMessageToDB(string message, string sended, long sended_numb)
 {
 	char *zErrMsg = 0;
 	int rc;
@@ -27,7 +27,7 @@ int  DBAchivesAccess::AddMessageToDB(string message, string sended, string censo
 	sqlite3_stmt* stmt = 0;
 
 	// Create SQL statement
-	sql = "INSERT INTO achives (message, sended, censored, loaded) VALUES (?,?, ?, ?)";
+	sql = "INSERT INTO achives (message, sended, sended_numb) VALUES (?, ?, ?)";
 
 	sqlite3_prepare_v2( db, sql.c_str(), -1, &stmt, 0 );
 
@@ -35,8 +35,7 @@ int  DBAchivesAccess::AddMessageToDB(string message, string sended, string censo
 	
 	sqlite3_bind_text(stmt,1,message.c_str(),-1,0);
 	sqlite3_bind_text(stmt,2,sended.c_str(),-1,0);
-	sqlite3_bind_text(stmt,3,censored.c_str(),-1,0);
-	sqlite3_bind_text(stmt,4,loaded.c_str(),-1,0);
+	sqlite3_bind_int64(stmt,3,sended_numb);
 
 	sqlite3_step( stmt );
 	sqlite3_clear_bindings( stmt );
@@ -58,7 +57,7 @@ int  DBAchivesAccess::AddMessageToDB(string message, string sended, string censo
 	}
 	
 	// Create SQL statement
-	sql = "SELECT id FROM achives WHERE message = \'" + message + "\' AND sended = \'" + sended + "\' AND sended = \'" + censored + "\' AND sended = \'" + loaded + "\' ;";
+	sql = "SELECT id FROM achives WHERE message = \'" + message + "\' AND sended = \'" + sended + "\' AND sended = " + to_string(sended_numb )+ " ;";
 	
 	int newId;
 	
@@ -83,7 +82,7 @@ bool	DBAchivesAccess::BuildAchivesTable()
 	sqlite3_stmt* stmt = 0;
 	
 	/* Create SQL statement */
-	sql = "CREATE TABLE if not exists  \"achives\" (\"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,\"message\"	TEXT NOT NULL,\"sended\"	TEXT NOT NULL,\"censored\"	TEXT NOT NULL,\"loaded\"	TEXT NOT NULL);";
+	sql = "CREATE TABLE if not exists  \"achives\" ( \"id\"	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, \"message\"	TEXT NOT NULL, \"sended\"	TEXT NOT NULL, \"censored\"	TEXT,\"loaded\"	TEXT,\"sended_numb\"	REAL NOT NULL,\"loaded_numb\"	REAL,\"duration\"	REAL);";
 	
 	rc = sqlite3_exec(db, sql.c_str(), 0, 0, 0);
 
@@ -130,24 +129,46 @@ int DBAchivesAccess::FindMessage(string message, string sended)
 	char *zErrMsg = 0;
 	int rc;
 	string sql;
-	bool isInTable = false;
+	int result;
 	sqlite3_stmt* stmt = 0;
-		
-	// Create SQL statement
-	sql = "SELECT id FROM achives WHERE message = \'" + message + "\' AND sended = \'" + sended + "\' ;";
+
+	sql = "SELECT id FROM achives WHERE message = ? AND sended = ?";
 	
-	int newId;
+	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
+
+	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 ); 
 	
-	rc = sqlite3_exec(db, sql.c_str(), GetIdFromDB,&newId, &zErrMsg);
+	sqlite3_bind_text(stmt,1,message.c_str(),-1,0);
+	sqlite3_bind_text(stmt,2,sended.c_str(),-1,0);
+	
+	while ( sqlite3_step( stmt ) == SQLITE_ROW )
+	{
+		result = sqlite3_column_int(stmt, 0);
+		if(result == 0)
+			result = -1;
+    }
+	
+	sqlite3_step( stmt );
+	sqlite3_clear_bindings( stmt );
+	sqlite3_reset( stmt );
+	
+	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
 	
 	if( rc != SQLITE_OK )
 	{
-		fprintf(stderr, "SQL GetIdFromDB error: %s\n", zErrMsg);
 		sqlite3_free(zErrMsg);
+		cout << "AddMessageToDB (IsAlreadyInTable) error:" << endl;
 		return -1;
-	} 
-	else
-			return newId;
+	}
+	
+	rc = sqlite3_finalize( stmt );
+ 
+	if( rc != SQLITE_OK ){
+		cout << "GetMessagesRecord error:" << endl;
+		return -1;
+	}
+	else 
+		return result;
 }
 
 std::string DBAchivesAccess::GetMessage(int id2)
@@ -170,7 +191,22 @@ std::string DBAchivesAccess::GetLoaded(int id)
 	return GetRecord(id,4);
 }
 
-string DBAchivesAccess::GetRecord	(int id, int column)
+long DBAchivesAccess::GetSendedNumb(int id)
+{
+	return stol(GetRecord(id,5));
+}
+
+long DBAchivesAccess::GetLoadedNumb(int id)
+{
+	return stol(GetRecord(id,6));
+}
+
+long DBAchivesAccess::GetDuration(int id)
+{
+	return stol(GetRecord(id,7));
+}
+		
+string DBAchivesAccess::GetRecord(int id, int column)
 {
 	char *zErrMsg = 0;
 	int rc;
@@ -233,7 +269,7 @@ bool DBAchivesAccess::GetAchivesInfoFromDB(std::string file_name)
 	}
 	
 	// Create SQL statement
-	sql = "SELECT id, message, sended, censored, loaded FROM achives;";
+	sql = "SELECT id, message, sended, censored, loaded, sended_numb, loaded_numb, duration FROM achives;";
 	
 	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToFile, &file, &zErrMsg);
   
@@ -265,7 +301,7 @@ bool DBAchivesAccess::GetAchiveInfoFromDB(int id, std::string file_name)
 	}
 	
 	// Create SQL statement
-	sql = "SELECT id, message, sended, censored, loaded FROM achives\
+	sql = "SELECT id, message, sended, censored, loaded, sended_numb, loaded_numb, duration FROM achives\
 			WHERE id = ?";
 			
 	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
@@ -305,7 +341,7 @@ std::ostream & DBAchivesAccess::GetAchivesInfoFromDB(std::ostream &out)
 	int rc;
 	string sql;
    
-	sql = "SELECT id, message, sended, censored, loaded FROM achives;";
+	sql = "SELECT id, message, sended, censored, loaded, sended_numb, loaded_numb, duration FROM achives;";
 		
 	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToStream, &out, &zErrMsg);
 	  
@@ -323,7 +359,7 @@ std::ostream & DBAchivesAccess::GetAchiveInfoFromDB(int id, std::ostream &out)
 	int rc;
 	string sql;
    
-	sql = "SELECT id, message, sended, censored, loaded FROM achives WHERE id = " + to_string(id) + ";";
+	sql = "SELECT id, message, sended, censored, loaded, sended_numb, loaded_numb, duration FROM achives WHERE id = " + to_string(id) + ";";
 		
 	rc = sqlite3_exec(db, sql.c_str(), PrintFromDBToStream, &out, &zErrMsg);
 	  
@@ -522,7 +558,7 @@ void DBAchivesAccess::SetSended(int id, string sended)
 	SetRecord(id, 2, "sended", sended);
 }
 
-void DBAchivesAccess::SetCensored(int id, std::string cenored)
+void DBAchivesAccess::SetCensored(int id, string cenored)
 {
 	SetRecord(id, 3, "censored", cenored);
 }
@@ -532,6 +568,20 @@ void DBAchivesAccess::SetLoaded(int id, string loaded)
 	SetRecord(id, 4, "loaded", loaded	);
 }
 
+void DBAchivesAccess::SetSendedNumb(int id, long sended_numb)
+{
+	SetRecord(id, 5, "sended_numb", to_string(sended_numb)	);
+}
+
+void DBAchivesAccess::SetLoadedNumb(int id, long loaded_numb)
+{
+	SetRecord(id, 6, "loaded_numb", to_string(loaded_numb));
+}
+
+void DBAchivesAccess::SetDuration(int id, long duration)
+{
+	SetRecord(id, 7, "duration", to_string(duration)	);
+}
 
 void DBAchivesAccess::SetRecord(int id, int columnx, std::string column, std::string new_value)
 {
@@ -540,45 +590,7 @@ void DBAchivesAccess::SetRecord(int id, int columnx, std::string column, std::st
 	string sql;
 	bool isInTable = false;
 	sqlite3_stmt* stmt = 0;
-
-	// Create SQL statement
-	sql = "SELECT * FROM achives WHERE id = ?";
 	
-	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );
-
-	sqlite3_exec( db, "BEGIN TRANSACTION", 0, 0, 0 );
-	
-	sqlite3_bind_int(stmt,1,id);
-	
-	while ( sqlite3_step( stmt ) == SQLITE_ROW )
-	{
-		const unsigned char *tmp = sqlite3_column_text( stmt, columnx );
-		string tmp2 = std::string(reinterpret_cast<const char*>(tmp));
-    }
-  
-	sqlite3_step( stmt );
-	sqlite3_clear_bindings( stmt );
-	sqlite3_reset( stmt );
-	
-	rc = sqlite3_exec( db, "END TRANSACTION", 0, 0, &zErrMsg );   //  End the transaction.
-	
-	if( rc != SQLITE_OK )
-	{
-		sqlite3_free(zErrMsg);
-		cout << "AddMessageToDB (IsAlreadyInTable) error:" << endl;
-		
-	}
-	
-	rc = sqlite3_finalize( stmt );
-	
-	if( rc != SQLITE_OK ){
-		cout << "SetRecord (IsAlreadyInTable) error:" << endl;
-		return;
-	}
-	else if(isInTable){
-		cout << "SetRecord (IsAlreadyInTable) error: Recored already has given value" << endl;
-		return;
-	}
 	sql = "UPDATE achives SET " + column + " = ?  WHERE id = ?";
 	
 	sqlite3_prepare_v2( db, sql.c_str(), sql.length(), &stmt, 0 );

@@ -4,10 +4,8 @@ using namespace std;
 
 bool Tests::testAll()
 {
-	//synchroTests();
 	
-	MessengerTests();
-	CensorshipTests();
+	synchroDBTests();
 }
 
 void Tests::initializeMutex()
@@ -124,7 +122,6 @@ bool Tests::DBATests()
 	return true;
 }
 
-
 bool Tests::SentencesTests()
 {
 	DBAccess  dba("sentenceGenerator.db");
@@ -160,6 +157,7 @@ bool Tests::SentencesTests()
 bool Tests::CensorshipTests()
 {
 	std::cout << std::endl << "I am consumer" << std::endl;
+	
 	CensorshipProgram cp;
 	/*
 	cp.generateForbidens(10);
@@ -223,8 +221,7 @@ bool Tests::MessengerTests()
 	
 	cout << messenger3 << endl;
 	
-	messenger3.sendMessage();
-	
+	messenger3.sendMessage();	
 }
 
 ostream & operator<< (ostream &out, const exceptionData &exc)
@@ -239,6 +236,36 @@ exceptionData PreperExceptionData(string className, string functionName, string 
     exc.thrownFunction = functionName;
     exc.thrownStatement = statement;
     return exc;
+}
+
+bool Tests::synchroDBTests()
+{
+	CensorshipProgram cp;
+	
+	cp.generateForbidens(10);
+	
+	cp.printForbidens();
+	
+	Messenger messenger("Producer");
+	
+	for(int i = 0; i < 10000; i++)
+	{
+		std::cout << std::endl << "I am producer" << std::endl;
+		
+		messenger.generateMessage();
+		
+		messenger.sendMessage();
+		
+		cout << messenger << endl;
+		
+		std::cout << std::endl << "I am consumer" << std::endl;
+		
+		cp.loadMessage();
+		
+		cp.censureMessage();
+		cout << "censored:" << endl;
+		cp.printCensored();
+	}
 }
 
 bool Tests::synchroTests()
